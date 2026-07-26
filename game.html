@@ -865,7 +865,12 @@ const gs = { paused:false, dialog:false, imgModal:false, inbox:false, map:false,
 const cv = document.getElementById('gameCanvas');
 const cx = cv.getContext('2d');
 let W, H, GY; // width, height, groundY
-function resize(){ W=cv.width=window.innerWidth; H=cv.height=window.innerHeight; GY=H-78; }
+const isTouchDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+function resize(){
+  W=cv.width=window.innerWidth; H=cv.height=window.innerHeight;
+  GY = H - (isTouchDevice() ? 170 : 78); // lift ground on mobile to clear joystick
+}
+
 resize(); window.addEventListener('resize', resize);
 
 // ════════════════════════════════════════════════════════════
@@ -1761,6 +1766,7 @@ function updateHint(){
   const n=getNear();
   if(n&&!gs.dialog&&!gs.paused&&!gs.trans&&!gs.imgModal){
     hintEl.style.left=ws(n.x)+'px'; hintEl.style.top=(GY+(n.y||0)-82)+'px';
+    hintEl.textContent = isTouchDevice() ? 'Tap Read' : 'Press Space';
     hintEl.classList.add('on');
   } else hintEl.classList.remove('on');
 }
