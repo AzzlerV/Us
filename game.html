@@ -51,11 +51,15 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 
 /* ── LEVEL PROGRESS BAR ── */
 #levelProgressBar {
-  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-  z-index: 12; width: min(380px, 45vw); height: 4px;
+  position: fixed; top: 20px; left: 22px; z-index: 12;
+  display: flex; flex-direction: column; gap: 5px;
+  pointer-events: none;
+}
+#levelProgressTrack {
+  width: min(180px, 36vw); height: 5px;
   background: rgba(255, 255, 255, 0.08); border-radius: 4px;
-  border: 1px solid rgba(200, 169, 110, 0.18);
-  overflow: hidden; pointer-events: none;
+  border: 1px solid rgba(200, 169, 110, 0.2);
+  overflow: hidden;
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 2px 12px rgba(0,0,0,0.5);
 }
@@ -65,6 +69,11 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
   box-shadow: 0 0 12px var(--ui-glow);
   transition: width 0.08s ease-out;
   border-radius: 4px;
+}
+#levelProgressText {
+  font-size: 0.65rem; font-family: 'Space Grotesk', sans-serif;
+  color: rgba(200, 169, 110, 0.85); letter-spacing: 0.14em;
+  font-weight: 500; text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 
 /* ── TOUCH & MOBILE CONTROLS ── */
@@ -118,7 +127,8 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
   .hud-btn { height: 38px; padding: 0 12px; font-size: 0.65rem; }
   #actionBtn { bottom: 22px; left: 22px; width: 70px; height: 70px; }
   #joystickBase { bottom: 22px; right: 22px; width: 110px; height: 110px; }
-  #levelProgressBar { top: 10px; width: min(220px, 40vw); }
+  #levelProgressBar { top: 12px; left: 12px; }
+  #levelProgressTrack { width: min(130px, 32vw); }
   #pauseScreen { flex-direction: column; overflow-y: auto; }
   #pauseLeft { width: 100% !important; min-width: 0 !important; max-width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(200,169,110,0.15); padding: 32px 24px 24px !important; }
   #pauseRight { width: 100% !important; padding: 24px !important; }
@@ -487,7 +497,10 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 <!-- HUD -->
 <!-- Level Progress Bar -->
 <div id="levelProgressBar">
-  <div id="levelProgressFill"></div>
+  <div id="levelProgressTrack">
+    <div id="levelProgressFill"></div>
+  </div>
+  <div id="levelProgressText">0%</div>
 </div>
 
 <div id="hud">
@@ -2704,11 +2717,14 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 // ════════════════════════════════════════════════════════════
 function updateProgressBar(){
   const bar=document.getElementById('levelProgressFill');
+  const txt=document.getElementById('levelProgressText');
   if(!bar||!curLevel) return;
   const startX=200;
   const endX=Math.max(startX+100,(curLevel.worldWidth||3200)-300);
   const pct=Math.max(0,Math.min(1,(player.worldX-startX)/(endX-startX)));
-  bar.style.width=(pct*100).toFixed(1)+'%';
+  const pctVal = Math.round(pct * 100);
+  bar.style.width=pctVal+'%';
+  if(txt) txt.textContent = pctVal + '%';
 }
 
 let last=0;
