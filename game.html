@@ -584,8 +584,10 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
     <div style="font-family:'Crimson Text',serif;font-size:1.4rem;color:var(--ui-accent);margin-bottom:16px;text-align:center">Add Element</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <button class="pbar-btn" id="addElTypeMsg" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Message</button>
+      <button class="pbar-btn" id="addElTypeImg" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Image</button>
       <button class="pbar-btn" id="addElTypeDeco" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Decoration</button>
       <button class="pbar-btn" id="addElTypeBlock" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Block</button>
+      <button class="pbar-btn" id="addElTypeDoor" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Door</button>
       <button class="pbar-btn" id="addElTypeExit" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Exit Door</button>
       <button class="pbar-btn" id="addElCancel" style="width:100%;height:36px;justify-content:center;background:transparent;border:none;margin-top:8px">Cancel</button>
     </div>
@@ -3263,6 +3265,12 @@ init();
       html += `<div class="pp-divider"></div>`;
       html += `<div class="pp-row"><span class="pp-lbl">Title</span><input class="pp-input" id="pp_title" value="${(el.title||'').replace(/"/g,'&quot;')}"></div>`;
       html += `<div class="pp-row"><span class="pp-lbl">Content</span><textarea class="pp-input" id="pp_content" style="height:80px;resize:vertical">${el.content||''}</textarea></div>`;
+      if (el.type === 'image') {
+        const iTypes = ['book', 'creature', 'scroll'];
+        html += `<div class="pp-divider"></div>`;
+        html += `<div class="pp-row"><span class="pp-lbl">Image SVG</span><select class="pp-input pp-select" id="pp_imgType">${iTypes.map(v => `<option value="${v}"${el.imageType===v?' selected':''}>${v}</option>`).join('')}</select></div>`;
+        html += `<div class="pp-row"><span class="pp-lbl">Custom URL</span><input class="pp-input" id="pp_imgUrl" placeholder="Optional image URL" value="${el.imageUrl||''}"></div>`;
+      }
     }
     if (el.type === 'block') {
       html += `<div class="pp-divider"></div>`;
@@ -3280,6 +3288,9 @@ init();
     bind('pp_h', e => { el.h = parseFloat(e.target.value)||40; S.saveLevel(curLevel); });
     bind('pp_title', e => { el.title = e.target.value; S.saveLevel(curLevel); });
     bind('pp_content', e => { el.content = e.target.value; S.saveLevel(curLevel); });
+    bind('pp_imgUrl', e => { el.imageUrl = e.target.value; S.saveLevel(curLevel); });
+    const imgTypeSel = document.getElementById('pp_imgType');
+    if (imgTypeSel) imgTypeSel.addEventListener('change', e => { el.imageType = e.target.value; S.saveLevel(curLevel); });
     const varSel = document.getElementById('pp_variant');
     if (varSel) varSel.addEventListener('change', e => { el.variant = e.target.value; S.saveLevel(curLevel); });
     const delBtn = document.getElementById('pp_del');
@@ -3389,8 +3400,10 @@ init();
     const wx = Math.round((camX + W * 0.5) / 40) * 40;
     const el = { id: 'el_'+Date.now(), type, x: wx, y: 0 };
     if (type === 'message') { el.title = 'New Message'; el.content = 'Enter content here.'; }
+    if (type === 'image') { el.title = 'New Image'; el.content = 'Caption here.'; el.imageType = 'book'; }
     if (type === 'decoration') { el.variant = 'tree'; el.scale = 1; }
     if (type === 'block') { el.w = 70; el.h = 45; el.color = '#3d2e1f'; }
+    if (type === 'door') { el.title = 'Sanctuary Door'; }
     if (type === 'exit') { el.nextLevelId = null; }
     curLevel.elements.push(el);
     peSelId = el.id;
@@ -3399,9 +3412,11 @@ init();
     toast('Element added!');
   }
   
+  document.getElementById('addElTypeImg').addEventListener('click', () => doAddElement('image'));
   document.getElementById('addElTypeDeco').addEventListener('click', () => doAddElement('decoration'));
   document.getElementById('addElTypeMsg').addEventListener('click', () => doAddElement('message'));
   document.getElementById('addElTypeBlock').addEventListener('click', () => doAddElement('block'));
+  document.getElementById('addElTypeDoor').addEventListener('click', () => doAddElement('door'));
   document.getElementById('addElTypeExit').addEventListener('click', () => doAddElement('exit'));
 
   // Keyboard shortcuts in preview mode
