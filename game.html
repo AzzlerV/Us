@@ -1060,7 +1060,8 @@ function handleKeyDown(k) {
     else if(gs.imgModal) closeImg();
     else togglePause();
   }
-  if((k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W') && !inputLocked){
+  // Space / X button: interact with element, or jump
+  if(k === ' ' && !inputLocked){
     if(gs.dialog){ dialogTyping ? completeTyping() : closeDialog(); return; }
     if(gs.imgModal){ closeImg(); return; }
     if(gs.map || gs.journal || gs.inbox) return;
@@ -1069,9 +1070,17 @@ function handleKeyDown(k) {
       if(near){
         interact();
       } else if(player.isGrounded) {
-        player.vy = -480; // Jump impulse
+        player.vy = -480;
         player.isGrounded = false;
       }
+    }
+  }
+  // ArrowUp / W: jump only (never interact with elements)
+  if((k === 'ArrowUp' || k === 'w' || k === 'W') && !inputLocked){
+    if(gs.dialog || gs.imgModal || gs.map || gs.journal || gs.inbox) return;
+    if(!gs.paused && !gs.trans && player.isGrounded) {
+      player.vy = -480;
+      player.isGrounded = false;
     }
   }
 }
