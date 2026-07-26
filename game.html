@@ -579,6 +579,18 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 </div>
 <div id="previewSelBox"></div>
 
+<div class="overlay" id="addElOv" style="z-index:400">
+  <div class="dialog" style="width:340px;padding:24px;background:rgba(8,4,16,0.98);border:1px solid rgba(139,111,245,0.4);border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,0.8),0 0 20px rgba(139,111,245,0.2)">
+    <div style="font-family:'Crimson Text',serif;font-size:1.4rem;color:var(--ui-accent);margin-bottom:16px;text-align:center">Add Element</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button class="pbar-btn" id="addElTypeMsg" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Message</button>
+      <button class="pbar-btn" id="addElTypeDeco" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Decoration</button>
+      <button class="pbar-btn" id="addElTypeBlock" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Block</button>
+      <button class="pbar-btn" id="addElTypeExit" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Exit Door</button>
+      <button class="pbar-btn" id="addElCancel" style="width:100%;height:36px;justify-content:center;background:transparent;border:none;margin-top:8px">Cancel</button>
+    </div>
+  </div>
+</div>
 <!-- HUD -->
 <!-- Level Progress Bar -->
 <div id="levelProgressBar">
@@ -3364,11 +3376,16 @@ init();
   // Toolbar buttons
   document.getElementById('pbarSave').addEventListener('click', peSave);
   document.getElementById('pbarClose').addEventListener('click', () => toggleEditMode(false));
+  
+  const addElOv = document.getElementById('addElOv');
   document.getElementById('pbarAddEl').addEventListener('click', () => {
     if (!curLevel) return;
-    const types = ['message','decoration','block','exit'];
-    const type = prompt('Element type:\n' + types.join(', '), 'decoration');
-    if (!types.includes(type)) { toast('Unknown type'); return; }
+    addElOv.classList.add('active');
+  });
+  document.getElementById('addElCancel').addEventListener('click', () => addElOv.classList.remove('active'));
+  
+  function doAddElement(type) {
+    addElOv.classList.remove('active');
     const wx = Math.round((camX + W * 0.5) / 40) * 40;
     const el = { id: 'el_'+Date.now(), type, x: wx, y: 0 };
     if (type === 'message') { el.title = 'New Message'; el.content = 'Enter content here.'; }
@@ -3380,7 +3397,12 @@ init();
     S.saveLevel(curLevel);
     peRenderPanel();
     toast('Element added!');
-  });
+  }
+  
+  document.getElementById('addElTypeDeco').addEventListener('click', () => doAddElement('decoration'));
+  document.getElementById('addElTypeMsg').addEventListener('click', () => doAddElement('message'));
+  document.getElementById('addElTypeBlock').addEventListener('click', () => doAddElement('block'));
+  document.getElementById('addElTypeExit').addEventListener('click', () => doAddElement('exit'));
 
   // Keyboard shortcuts in preview mode
   document.addEventListener('keydown', e => {
