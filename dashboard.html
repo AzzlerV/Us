@@ -553,6 +553,12 @@ const S = {
   },
   saveProfiles(profs){ this.set('muskan_profiles', profs); },
   setActiveProfile(p){ this.set('muskan_player', p); },
+  resetOnboarding(playerId){ 
+    const k = 'muskan_ob_played_' + playerId;
+    this.cloud[k] = [];
+    try{localStorage.removeItem(k)}catch{}
+    if(db) db.ref(k).remove();
+  },
 };
 
 // ════════════════════════════════════════════════════════════
@@ -1269,6 +1275,7 @@ function renderProfiles(){
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             ${!isActive ? `<button class="save-btn set-active-prof" data-id="${p.playerId}" style="flex:1;padding:5px;font-size:9px;margin:0">Set Active</button>` : ''}
             <button class="save-btn edit-prof-btn" data-id="${p.playerId}" style="flex:1;padding:5px;font-size:9px;margin:0;background:rgba(200,169,110,0.08);border-color:rgba(200,169,110,0.3);color:var(--accent2)">✏ Edit</button>
+            <button class="del-btn reset-ob-btn" data-id="${p.playerId}" style="flex:1;padding:5px;font-size:9px;margin:0;color:#7ab8ff;border-color:rgba(100,150,255,0.3)">↺ Onboarding</button>
             <button class="del-btn reset-prof-btn" data-id="${p.playerId}" style="flex:1;padding:5px;font-size:9px;margin:0;color:var(--accent2);border-color:rgba(200,169,110,0.3)">Reset Progress</button>
             <button class="del-btn del-prof-btn" data-id="${p.playerId}" style="flex:1;padding:5px;font-size:9px;margin:0">Delete</button>
           </div>
@@ -1322,9 +1329,21 @@ function renderProfiles(){
         target.messagesRead = [];
         target.savedMemories = [];
         S.saveProfiles(profs);
+        S.resetOnboarding(pid);
         if(pid === activeId) S.setActiveProfile(target);
-        showToast('Progress reset ✓');
+        showToast('Progress & onboarding reset ✓');
         renderProfiles();
+      }
+    });
+  });
+
+  body.querySelectorAll('.reset-ob-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pid = btn.dataset.id;
+      const target = profs.find(p => p.playerId === pid);
+      if(target && confirm(`Reset onboarding for "${target.name || pid}"? They will see intro sequences again.`)){
+        S.resetOnboarding(pid);
+        showToast('Onboarding reset ✓ — sequences will replay on next login');
       }
     });
   });
