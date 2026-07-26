@@ -2124,6 +2124,7 @@ function showGameToast(msg, ms=2400){
     setTimeout(()=>gameToastEl.classList.remove('on','out'), 300);
   }, ms);
 }
+const toast = showGameToast; // alias used throughout game code
 
 // ════════════════════════════════════════════════════════════
 // SAVED MEMORIES / BOOKMARKS
@@ -3124,9 +3125,9 @@ async function init(){
     // Visitors ALWAYS enter in the Entrance Lobby!
     document.getElementById('picker').classList.add('gone');
     loadLevel('lobby');
-    toast('Welcome. Walk right to the Sanctuary Door.');
   }
   requestAnimationFrame(loop);
+  if (!preview) setTimeout(() => toast('Welcome. Walk right to the Sanctuary Door.'), 800);
 }
 
 init();
