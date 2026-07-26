@@ -504,14 +504,19 @@ const S = {
       setTimeout(resolve, 2000); 
     });
   },
-  async getLevels(){ return this.get('muskan_levels'); },
+  async getLevels(){ 
+    const res = this.get('muskan_levels'); 
+    if (res && typeof res === 'object' && res.custom !== undefined) return res.data;
+    if (Array.isArray(res)) return res;
+    return null;
+  },
   async saveLevel(lv){
     const all=await this.getLevels()||[];
     const idx=all.findIndex(l=>l.id===lv.id);
     if(idx>=0) all[idx]=lv; else all.push(lv);
     await this.saveLevels(all);
   },
-  async saveLevels(lvs){ this.set('muskan_levels',lvs); },
+  async saveLevels(lvs){ this.set('muskan_levels', { custom: true, data: lvs }); },
   async getMsgs(){ return this.get('muskan_messages',[]); },
   async replyMsg(msgId,replyText,playerId){
     const all=await this.getMsgs();
@@ -927,7 +932,7 @@ function handleLvlAction(id, act){
     if(curLvlId===id){curLvlId=levels[0]?.id||null;selElId=null;}
   }
   levels.forEach((l,i)=>l.index=i);
-  S.set('muskan_levels',levels);
+  S.saveLevels(levels);
   renderLevelList(); renderProps(); renderEditor();
 }
 
@@ -951,7 +956,7 @@ document.getElementById('confirmAddLvl').addEventListener('click',()=>{
     id:'level_'+Date.now(), index:levels.length, title, theme, isVisible:true, worldWidth:ww,
     elements:[{id:'exit_'+Date.now(),type:'exit',x:ww-200,nextLevelId:null}]
   };
-  levels.push(newLv); S.set('muskan_levels',levels);
+  levels.push(newLv); S.saveLevels(levels);
   document.getElementById('addLvlModal').classList.remove('active');
   selectLevel(newLv.id); renderLevelList();
 });
@@ -1723,7 +1728,11 @@ document.getElementById('prevObNextBtn').addEventListener('click', () => {
 async function init(){
   await S.initCloud();
   const remote=await S.getLevels();
-  levels=remote||DEFAULT_LEVELS;
+  if (remote !== null && remote !== undefined) {
+    levels = remote;
+  } else {
+    levels = DEFAULT_LEVELS;
+  }
 
   // Check for unread inbox messages
   const msgs=S.get('muskan_messages',[]);

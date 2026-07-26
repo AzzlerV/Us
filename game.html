@@ -758,7 +758,12 @@ const S = {
       setTimeout(resolve, 2000); 
     });
   },
-  async getLevels(){ return this.get('muskan_levels'); },
+  async getLevels(){ 
+    const res = this.get('muskan_levels'); 
+    if (res && typeof res === 'object' && res.custom !== undefined) return res.data;
+    if (Array.isArray(res)) return res;
+    return null;
+  },
   async saveProgress(p){ 
     this.set('muskan_player', p); 
     if(p.playerId) {
@@ -2322,7 +2327,11 @@ let levels=[], curLevel=null;
 
 async function initLevels(){
   const remote=await S.getLevels();
-  levels=remote||DEFAULT_LEVELS;
+  if (remote !== null && remote !== undefined) {
+    levels = remote;
+  } else {
+    levels = DEFAULT_LEVELS;
+  }
 }
 
 function loadLevel(id){
