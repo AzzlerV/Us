@@ -587,6 +587,7 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
       <button class="pbar-btn" id="addElTypeImg" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Image</button>
       <button class="pbar-btn" id="addElTypeDeco" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Decoration</button>
       <button class="pbar-btn" id="addElTypeBlock" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Block</button>
+      <button class="pbar-btn" id="addElTypeHazard" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Hazard / Spikes</button>
       <button class="pbar-btn" id="addElTypeDoor" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Door</button>
       <button class="pbar-btn" id="addElTypeExit" style="width:100%;height:36px;justify-content:center;background:rgba(255,255,255,0.05)">Exit Door</button>
       <button class="pbar-btn" id="addElCancel" style="width:100%;height:36px;justify-content:center;background:transparent;border:none;margin-top:8px">Cancel</button>
@@ -1660,6 +1661,7 @@ function drawElements(lv){
       case 'image':      drawImgNode(el,sx); break;
       case 'exit':       drawExit(el,sx); break;
       case 'block':      drawBlock(el,sx); break;
+      case 'hazard':     drawHazard(el,sx); break;
       case 'door':       drawDoor(el,sx); break;
     }
     cx.restore();
@@ -1678,6 +1680,27 @@ function drawBlock(el, sx){
   cx.strokeRect(sx - w/2, py, w, h);
   cx.fillStyle = 'rgba(255,255,255,0.07)';
   cx.fillRect(sx - w/2, py, w, 4);
+  cx.restore();
+}
+
+function drawHazard(el, sx){
+  const w = el.w || 60, h = 20;
+  const py = GY;
+  cx.save();
+  cx.translate(sx - w/2, py);
+  cx.fillStyle = '#ff2b56';
+  cx.shadowBlur = 15; cx.shadowColor = 'rgba(255,43,86,0.6)';
+  
+  // Draw spikes
+  cx.beginPath();
+  const spikes = Math.max(3, Math.floor(w / 12));
+  const sw = w / spikes;
+  cx.moveTo(0, 0);
+  for(let i=0; i<spikes; i++) {
+    cx.lineTo(i*sw + sw/2, -h);
+    cx.lineTo((i+1)*sw, 0);
+  }
+  cx.fill();
   cx.restore();
 }
 
@@ -2358,6 +2381,27 @@ function updatePlayer(dt){
       }
     }
   }
+  
+  // Hazard collision check
+  const hazards = (lv.elements||[]).filter(e=>e.type==='hazard');
+  for(const hz of hazards){
+    const hw = hz.w || 60, hy = -(hz.y || 0);
+    const hzLeft = hz.x - hw/2, hzRight = hz.x + hw/2;
+    if(player.worldX + halfW > hzLeft && player.worldX - halfW < hzRight){
+      // Spike height is roughly 20. Allow a little forgiveness on the sides and top
+      if(nextYOff <= hy + 18 && nextYOff >= hy - 10){
+        toast('☠ You died. Restarting level...');
+        player.worldX = 200;
+        player.yOff = 0;
+        player.vy = 0;
+        player.isGrounded = true;
+        nextYOff = 0;
+        S.saveProgress(player);
+        return;
+      }
+    }
+  }
+  
   player.yOff = nextYOff;
 
   // Horizontal movement & side collision
@@ -3291,6 +3335,10 @@ init();
       html += `<div class="pp-row"><span class="pp-lbl">Width</span><input class="pp-input" id="pp_w" type="number" value="${el.w||60}" step="10"></div>`;
       html += `<div class="pp-row"><span class="pp-lbl">Height</span><input class="pp-input" id="pp_h" type="number" value="${el.h||40}" step="10"></div>`;
     }
+    if (el.type === 'hazard') {
+      html += `<div class="pp-divider"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Width</span><input class="pp-input" id="pp_w" type="number" value="${el.w||60}" step="10"></div>`;
+    }
     html += `<button class="pp-del-btn" id="pp_del">🗑 Delete Element</button>`;
     ppBody.innerHTML = html;
 
@@ -3417,6 +3465,7 @@ init();
     if (type === 'image') { el.title = 'New Image'; el.content = 'Caption here.'; el.imageType = 'book'; }
     if (type === 'decoration') { el.variant = 'tree'; el.scale = 1; }
     if (type === 'block') { el.w = 70; el.h = 45; el.color = '#3d2e1f'; }
+    if (type === 'hazard') { el.w = 60; }
     if (type === 'door') { el.title = 'Sanctuary Door'; }
     if (type === 'exit') { el.nextLevelId = null; }
     curLevel.elements.push(el);
@@ -3430,6 +3479,7 @@ init();
   document.getElementById('addElTypeDeco').addEventListener('click', () => doAddElement('decoration'));
   document.getElementById('addElTypeMsg').addEventListener('click', () => doAddElement('message'));
   document.getElementById('addElTypeBlock').addEventListener('click', () => doAddElement('block'));
+  document.getElementById('addElTypeHazard').addEventListener('click', () => doAddElement('hazard'));
   document.getElementById('addElTypeDoor').addEventListener('click', () => doAddElement('door'));
   document.getElementById('addElTypeExit').addEventListener('click', () => doAddElement('exit'));
 
