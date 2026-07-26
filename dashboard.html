@@ -459,58 +459,62 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk'
 <!-- Toast -->
 <div id="toast">Saved ✓</div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 'use strict';
 // ════════════════════════════════════════════════════════════
-// CONFIG — same as game.html
+// CONFIG & FIREBASE
 // ════════════════════════════════════════════════════════════
-const CONFIG = {
-  API_BASE: '', // e.g. 'https://api.example.com'
-  EP: {
-    levels:      () => `${CONFIG.API_BASE}/levels`,
-    level:      id => `${CONFIG.API_BASE}/level/${id}`,
-    postLevel:   () => `${CONFIG.API_BASE}/level`,
-    putLevel:   id => `${CONFIG.API_BASE}/level/${id}`,
-    getMsgs:     () => `${CONFIG.API_BASE}/messages`,
-    postMsg:     () => `${CONFIG.API_BASE}/message`,
-  }
+const firebaseConfig = {
+  apiKey: "AIzaSyBnwylqjzxRQ6ZkIuH3bUVJoTVRXl5Rr_A",
+  authDomain: "us-world.firebaseapp.com",
+  databaseURL: "https://us-world-default-rtdb.firebaseio.com",
+  projectId: "us-world",
+  storageBucket: "us-world.firebasestorage.app",
+  messagingSenderId: "131353438428",
+  appId: "1:131353438428:web:eb50b647faa8343887ec19",
+  measurementId: "G-BPHP5ME09F"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // ════════════════════════════════════════════════════════════
-// STORAGE
+// STORAGE — Firebase Realtime Database + Local Fallback
 // ════════════════════════════════════════════════════════════
 const S = {
-  get(k,fb=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb}},
-  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
-  async api(url,opts={}){
-    if(!CONFIG.API_BASE) return null;
-    try{const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});if(!r.ok)throw new Error(r.status);return await r.json();}
-    catch(e){console.warn('[Dashboard] API unavailable →',e.message);return null;}
+  cloud: {},
+  get(k, fb=null) { 
+    if (this.cloud[k] !== undefined) return JSON.parse(JSON.stringify(this.cloud[k]));
+    try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb} 
   },
-  // 🔌 GET /levels
-  async getLevels(){const r=await this.api(CONFIG.EP.levels());return r||this.get('muskan_levels');},
-  // 🔌 PUT /level/:id or POST /level
+  set(k, v) { 
+    this.cloud[k] = v;
+    try{localStorage.setItem(k,JSON.stringify(v))}catch{} 
+    if (db) db.ref(k).set(v);
+  },
+  async initCloud() {
+    return new Promise(resolve => {
+      db.ref('/').on('value', snap => {
+        this.cloud = snap.val() || {};
+        resolve(); // Resolves on first load
+      });
+      // Fallback if offline
+      setTimeout(resolve, 2000); 
+    });
+  },
+  async getLevels(){ return this.get('muskan_levels'); },
   async saveLevel(lv){
-    const all=this.get('muskan_levels',[])||[];
+    const all=await this.getLevels()||[];
     const idx=all.findIndex(l=>l.id===lv.id);
     if(idx>=0) all[idx]=lv; else all.push(lv);
-    this.set('muskan_levels',all);
-    // 🔌 API HOOK
-    if(idx>=0) await this.api(CONFIG.EP.putLevel(lv.id),{method:'PUT',body:JSON.stringify(lv)});
-    else await this.api(CONFIG.EP.postLevel(),{method:'POST',body:JSON.stringify(lv)});
+    await this.saveLevels(all);
   },
-  async saveLevels(lvs){
-    this.set('muskan_levels',lvs);
-    // 🔌 API HOOK: batch save — POST each changed level
-    for(const lv of lvs) await this.api(CONFIG.EP.putLevel(lv.id),{method:'PUT',body:JSON.stringify(lv)});
-  },
-  async getMsgs(){
-    const r=await this.api(CONFIG.EP.getMsgs());
-    if(r) return r;
-    return this.get('muskan_messages',[]);
-  },
+  async saveLevels(lvs){ this.set('muskan_levels',lvs); },
+  async getMsgs(){ return this.get('muskan_messages',[]); },
   async replyMsg(msgId,replyText,playerId){
-    const all=this.get('muskan_messages',[]);
+    const all=await this.getMsgs();
     const orig=all.find(m=>m.messageId===msgId);
     const reply={
       messageId:'reply_'+Date.now(),
@@ -523,11 +527,9 @@ const S = {
     };
     all.push(reply);
     this.set('muskan_messages',all);
-    // 🔌 API HOOK: POST /message
-    await this.api(CONFIG.EP.postMsg(),{method:'POST',body:JSON.stringify(reply)});
   },
-  markRead(msgId){
-    const all=this.get('muskan_messages',[]);
+  async markRead(msgId){
+    const all=await this.getMsgs();
     const m=all.find(m=>m.messageId===msgId); if(m) m.isRead=true;
     this.set('muskan_messages',all);
   },
@@ -1719,6 +1721,7 @@ document.getElementById('prevObNextBtn').addEventListener('click', () => {
 // INIT
 // ════════════════════════════════════════════════════════════
 async function init(){
+  await S.initCloud();
   const remote=await S.getLevels();
   levels=remote||DEFAULT_LEVELS;
 

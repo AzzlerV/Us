@@ -595,56 +595,75 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
         <div id="pkPreview"><canvas id="pkCanvas" width="70" height="70"></canvas></div>
       </div>
       <button id="startBtn">Begin →</button>
+      <button id="loginSyncBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.2);margin-top:10px">Login to Sync Profile</button>
     </div>
   </div>
 </div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 'use strict';
 // ════════════════════════════════════════════════════════════
-// CONFIG  —  set API_BASE to enable backend sync
+// CONFIG & FIREBASE
 // ════════════════════════════════════════════════════════════
-const CONFIG = {
-  API_BASE: '', // e.g. 'https://api.example.com'  (empty = offline / localStorage)
-  EP: {
-    levels:       () => `${CONFIG.API_BASE}/levels`,
-    level:       id => `${CONFIG.API_BASE}/level/${id}`,
-    postLevel:    () => `${CONFIG.API_BASE}/level`,
-    putLevel:    id => `${CONFIG.API_BASE}/level/${id}`,
-    postMsg:      () => `${CONFIG.API_BASE}/message`,
-    getMsgs:      () => `${CONFIG.API_BASE}/messages`,
-    postProg:     () => `${CONFIG.API_BASE}/progress`,
-    getProg:     id => `${CONFIG.API_BASE}/progress/${id}`,
-  }
+const firebaseConfig = {
+  apiKey: "AIzaSyBnwylqjzxRQ6ZkIuH3bUVJoTVRXl5Rr_A",
+  authDomain: "us-world.firebaseapp.com",
+  databaseURL: "https://us-world-default-rtdb.firebaseio.com",
+  projectId: "us-world",
+  storageBucket: "us-world.firebasestorage.app",
+  messagingSenderId: "131353438428",
+  appId: "1:131353438428:web:eb50b647faa8343887ec19",
+  measurementId: "G-BPHP5ME09F"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // ════════════════════════════════════════════════════════════
-// STORAGE — localStorage + optional API overlay
+// STORAGE — Firebase Realtime Database + Local Fallback
 // ════════════════════════════════════════════════════════════
 const S = {
-  get(k, fb=null){ try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb} },
-  set(k,v){ try{localStorage.setItem(k,JSON.stringify(v))}catch{} },
-  async api(url, opts={}){
-    if(!CONFIG.API_BASE) return null;
-    try{
-      const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});
-      if(!r.ok) throw new Error(r.status);
-      return await r.json();
-    }catch(e){
-      console.warn('[Muskan] API unavailable →',e.message);
-      return null;
+  cloud: {},
+  get(k, fb=null) { 
+    if (this.cloud[k] !== undefined) return JSON.parse(JSON.stringify(this.cloud[k]));
+    try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb} 
+  },
+  set(k, v) { 
+    this.cloud[k] = v;
+    try{localStorage.setItem(k,JSON.stringify(v))}catch{} 
+    if (db) db.ref(k).set(v);
+  },
+  async initCloud() {
+    return new Promise(resolve => {
+      db.ref('/').on('value', snap => {
+        this.cloud = snap.val() || {};
+        resolve(); // Resolves on first load
+      });
+      // Fallback if offline
+      setTimeout(resolve, 2000); 
+    });
+  },
+  async getLevels(){ return this.get('muskan_levels'); },
+  async saveProgress(p){ 
+    this.set('muskan_player', p); 
+    if(p.playerId) {
+      let profs = this.get('muskan_profiles', []);
+      const idx = profs.findIndex(x=>x.playerId===p.playerId);
+      if(idx>=0) profs[idx] = p; else profs.push(p);
+      this.set('muskan_profiles', profs);
     }
   },
-  // 🔌 GET /levels
-  async getLevels(){ const r=await this.api(CONFIG.EP.levels()); return r||this.get('muskan_levels'); },
-  // 🔌 POST /progress
-  async saveProgress(p){ this.set('muskan_player',p); await this.api(CONFIG.EP.postProg(),{method:'POST',body:JSON.stringify(p)}); },
-  // 🔌 GET /progress/:id
-  async loadProgress(id){ const r=await this.api(CONFIG.EP.getProg(id)); return r||this.get('muskan_player'); },
-  // 🔌 POST /message
-  async sendMsg(m){ const a=this.get('muskan_messages',[]); a.push(m); this.set('muskan_messages',a); await this.api(CONFIG.EP.postMsg(),{method:'POST',body:JSON.stringify(m)}); },
-  // 🔌 GET /messages
-  async getMsgs(pid){ const r=await this.api(CONFIG.EP.getMsgs()+`?playerId=${pid}`); if(r) return r; return this.get('muskan_messages',[]).filter(m=>m.playerId===pid); },
+  async loadProgress(id){ 
+    const profs = this.get('muskan_profiles', []);
+    const p = profs.find(x => x.playerId === id);
+    return p || this.get('muskan_player');
+  },
+  async sendMsg(m){ 
+    const a = this.get('muskan_messages', []); a.push(m); this.set('muskan_messages', a); 
+  },
+  async getMsgs(pid){ return this.get('muskan_messages', []).filter(m=>m.playerId===pid); }
 };
 
 // ════════════════════════════════════════════════════════════
@@ -2563,6 +2582,7 @@ function handleActionPress() {
 // INIT
 // ════════════════════════════════════════════════════════════
 async function init(){
+  await S.initCloud();
   initTouchControls();
   await initLevels();
   const params=new URLSearchParams(location.search);
