@@ -3311,7 +3311,8 @@ init();
       return;
     }
 
-    let html = `<div class="pp-row"><span class="pp-lbl">Type</span><span style="font-size:0.75rem;color:rgba(139,111,245,0.9);letter-spacing:0.1em">${el.type.toUpperCase()}</span></div>`;
+    const allTypes = ['message', 'image', 'decoration', 'block', 'hazard', 'door', 'exit'];
+    let html = `<div class="pp-row"><span class="pp-lbl">Type</span><select class="pp-input pp-select" id="pp_type">${allTypes.map(t => `<option value="${t}"${el.type===t?' selected':''}>${t.toUpperCase()}</option>`).join('')}</select></div>`;
     html += `<div class="pp-divider"></div>`;
     html += `<div class="pp-row"><span class="pp-lbl">World X</span><input class="pp-input" id="pp_x" type="number" value="${Math.round(el.x)}" step="40"></div>`;
     html += `<div class="pp-row"><span class="pp-lbl">World Y</span><input class="pp-input" id="pp_y" type="number" value="${Math.round(el.y||0)}" step="20"></div>`;
@@ -3355,6 +3356,8 @@ init();
     if (imgTypeSel) imgTypeSel.addEventListener('change', e => { el.imageType = e.target.value; S.saveLevel(curLevel); });
     const varSel = document.getElementById('pp_variant');
     if (varSel) varSel.addEventListener('change', e => { el.variant = e.target.value; S.saveLevel(curLevel); });
+    const typeSel = document.getElementById('pp_type');
+    if (typeSel) typeSel.addEventListener('change', e => { el.type = e.target.value; S.saveLevel(curLevel); peRenderPanel(); });
     const delBtn = document.getElementById('pp_del');
     if (delBtn) delBtn.addEventListener('click', () => {
       if (!confirm('Delete this element?')) return;
