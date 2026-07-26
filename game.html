@@ -635,26 +635,60 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 <!-- Transition overlay -->
 <div id="trans"></div>
 
-<!-- Character Picker -->
+<!-- Entry Screen -->
 <div id="picker">
-  <div class="pk-title">Muskan</div>
-  <div class="pk-sub">An atmospheric journey</div>
-  <div class="pk-wrap">
-    <div>
-      <div class="pk-lbl">Choose your shape</div>
-      <div class="shape-row" id="shapeRow"></div>
-    </div>
-    <div>
-      <div class="pk-lbl">Choose your color</div>
-      <div class="color-row" id="colorRow"></div>
-    </div>
-    <div id="pkPreviewWrap">
-      <div>
-        <div class="pk-lbl" style="margin-bottom:8px">Preview</div>
-        <div id="pkPreview"><canvas id="pkCanvas" width="70" height="70"></canvas></div>
+  <!-- ── Step 1: Login / Profile Select ── -->
+  <div id="pkLogin">
+    <div class="pk-title">Muskan</div>
+    <div class="pk-sub">An atmospheric journey</div>
+    <div id="pkProfileList"></div>
+    <div id="pkPassSection" style="display:none">
+      <div class="pk-lbl" style="margin-bottom:8px">Enter your password</div>
+      <input id="pkPassInput" type="password" placeholder="Password…" autocomplete="current-password"
+        style="width:100%;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.3);
+        color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.1rem;padding:10px 0;
+        outline:none;letter-spacing:0.06em;transition:border-color 0.2s;max-width:340px">
+      <div id="pkPassErr" style="font-size:0.7rem;color:#e05a5a;letter-spacing:0.12em;margin-top:8px;display:none">Incorrect password. Try again.</div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button id="pkEnterBtn" style="padding:11px 28px;background:rgba(200,169,110,0.1);border:1px solid rgba(200,169,110,0.45);border-radius:2px;color:var(--ui-accent);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">Enter →</button>
+        <button id="pkCancelBtn" style="padding:11px 20px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(255,255,255,0.35);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">← Back</button>
       </div>
-      <button id="startBtn">Begin →</button>
-      <button id="loginSyncBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.2);margin-top:10px">Login to Sync Profile</button>
+    </div>
+    <div id="pkNewBtn" style="margin-top:4px">
+      <button style="background:transparent;border:none;color:rgba(255,255,255,0.2);font-family:'Crimson Text',serif;font-size:0.9rem;letter-spacing:0.1em;cursor:pointer;padding:4px 0;transition:color 0.2s" id="pkNewProfileBtn">+ New Journey</button>
+    </div>
+  </div>
+
+  <!-- ── Step 2: New Player character creation ── -->
+  <div id="pkCreate" style="display:none">
+    <div class="pk-title">Begin</div>
+    <div class="pk-sub">Create your presence</div>
+    <div class="pk-wrap">
+      <div>
+        <div class="pk-lbl">Your name</div>
+        <input id="pkNameInput" type="text" placeholder="Enter a name…" autocomplete="off"
+          style="width:100%;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.25);
+          color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.1rem;padding:10px 0;
+          outline:none;letter-spacing:0.06em;transition:border-color 0.2s">
+      </div>
+      <div>
+        <div class="pk-lbl">Choose your shape</div>
+        <div class="shape-row" id="shapeRow"></div>
+      </div>
+      <div>
+        <div class="pk-lbl">Choose your color</div>
+        <div class="color-row" id="colorRow"></div>
+      </div>
+      <div id="pkPreviewWrap">
+        <div>
+          <div class="pk-lbl" style="margin-bottom:8px">Preview</div>
+          <div id="pkPreview"><canvas id="pkCanvas" width="70" height="70"></canvas></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button id="startBtn">Begin →</button>
+          <button id="pkBackToLogin" style="background:transparent;border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:2px;color:rgba(255,255,255,0.3);font-family:'Space Grotesk',sans-serif;font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer">← Back</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2287,22 +2321,114 @@ const COLORS=['#c8a96e','#e05a5a','#5a9de0','#5ae09a','#e05ab0','#a05ae0','#e0a0
 let pkShape='circle', pkColor=COLORS[0];
 
 function initPicker(){
-  const sr=document.getElementById('shapeRow'), cr=document.getElementById('colorRow');
-  SHAPES.forEach(sh=>{
-    const btn=document.createElement('button'); btn.className='sh-btn'+(sh===pkShape?' sel':''); btn.dataset.shape=sh;
-    const c=document.createElement('canvas'); c.width=42; c.height=42;
-    drawShapePv(c.getContext('2d'),21,21,14,'#c8a96e',sh); btn.appendChild(c);
-    btn.addEventListener('click',()=>{pkShape=sh;document.querySelectorAll('.sh-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');updatePv();});
+  // Build profile list for login screen
+  const listEl = document.getElementById('pkProfileList');
+  const profs = S.get('muskan_profiles', []);
+  let selectedProf = null;
+
+  function renderProfileList() {
+    const profs = S.get('muskan_profiles', []);
+    listEl.innerHTML = '';
+    if (!profs || profs.length === 0) {
+      listEl.innerHTML = `<div style="color:rgba(255,255,255,0.22);font-family:'Crimson Text',serif;font-size:1rem;letter-spacing:0.08em;margin-bottom:16px;font-style:italic">No journeys found. Start a new one.</div>`;
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:20px;max-width:340px;width:100%';
+    profs.forEach(p => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `display:flex;align-items:center;gap:14px;padding:12px 16px;
+        background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+        border-radius:3px;cursor:pointer;transition:all 0.22s;width:100%;text-align:left;`;
+      const c = document.createElement('canvas'); c.width=32; c.height=32;
+      drawShapePv(c.getContext('2d'), 16, 16, 10, p.color||'#c8a96e', p.shape||'circle');
+      const nameEl = document.createElement('div');
+      nameEl.style.cssText = 'font-family:\'Crimson Text\',serif;font-size:1.05rem;color:rgba(240,230,210,0.6);letter-spacing:0.05em;';
+      nameEl.textContent = p.name || 'Explorer';
+      btn.appendChild(c); btn.appendChild(nameEl);
+      btn.addEventListener('mouseenter', () => { btn.style.background='rgba(200,169,110,0.07)'; btn.style.borderColor='rgba(200,169,110,0.2)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.background='rgba(255,255,255,0.03)'; btn.style.borderColor='rgba(255,255,255,0.06)'; });
+      btn.addEventListener('click', () => {
+        selectedProf = p;
+        // If no password set, enter directly
+        if (!p.password) {
+          enterWithProfile(p);
+        } else {
+          document.getElementById('pkPassSection').style.display = '';
+          document.getElementById('pkNewBtn').style.display = 'none';
+          document.getElementById('pkPassInput').value = '';
+          document.getElementById('pkPassErr').style.display = 'none';
+          document.getElementById('pkPassInput').focus();
+        }
+      });
+      wrap.appendChild(btn);
+    });
+    listEl.appendChild(wrap);
+  }
+
+  renderProfileList();
+
+  // Password entry
+  document.getElementById('pkEnterBtn').addEventListener('click', () => {
+    const val = document.getElementById('pkPassInput').value;
+    if (selectedProf && val === selectedProf.password) {
+      enterWithProfile(selectedProf);
+    } else {
+      document.getElementById('pkPassErr').style.display = 'block';
+      document.getElementById('pkPassInput').value = '';
+      document.getElementById('pkPassInput').focus();
+    }
+  });
+  document.getElementById('pkPassInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('pkEnterBtn').click();
+  });
+  document.getElementById('pkCancelBtn').addEventListener('click', () => {
+    document.getElementById('pkPassSection').style.display = 'none';
+    document.getElementById('pkNewBtn').style.display = '';
+    selectedProf = null;
+  });
+
+  // New profile flow
+  document.getElementById('pkNewProfileBtn').addEventListener('click', () => {
+    document.getElementById('pkLogin').style.display = 'none';
+    document.getElementById('pkCreate').style.display = '';
+    buildCreator();
+  });
+  document.getElementById('pkBackToLogin').addEventListener('click', () => {
+    document.getElementById('pkLogin').style.display = '';
+    document.getElementById('pkCreate').style.display = 'none';
+  });
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+}
+
+function buildCreator() {
+  const sr = document.getElementById('shapeRow');
+  const cr = document.getElementById('colorRow');
+  if (sr.childElementCount > 0) { updatePv(); return; } // already built
+  SHAPES.forEach(sh => {
+    const btn = document.createElement('button'); btn.className = 'sh-btn' + (sh === pkShape ? ' sel' : ''); btn.dataset.shape = sh;
+    const c = document.createElement('canvas'); c.width = 42; c.height = 42;
+    drawShapePv(c.getContext('2d'), 21, 21, 14, '#c8a96e', sh); btn.appendChild(c);
+    btn.addEventListener('click', () => { pkShape = sh; document.querySelectorAll('.sh-btn').forEach(b => b.classList.remove('sel')); btn.classList.add('sel'); updatePv(); });
     sr.appendChild(btn);
   });
-  COLORS.forEach(col=>{
-    const btn=document.createElement('button'); btn.className='co-btn'+(col===pkColor?' sel':'');
-    btn.style.background=col; btn.dataset.color=col;
-    btn.addEventListener('click',()=>{pkColor=col;document.querySelectorAll('.co-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');updatePv();});
+  COLORS.forEach(col => {
+    const btn = document.createElement('button'); btn.className = 'co-btn' + (col === pkColor ? ' sel' : '');
+    btn.style.background = col; btn.dataset.color = col;
+    btn.addEventListener('click', () => { pkColor = col; document.querySelectorAll('.co-btn').forEach(b => b.classList.remove('sel')); btn.classList.add('sel'); updatePv(); });
     cr.appendChild(btn);
   });
   updatePv();
-  document.getElementById('startBtn').addEventListener('click',startGame);
+}
+
+function enterWithProfile(p) {
+  Object.assign(player, p);
+  S.set('muskan_player', p);
+  document.getElementById('picker').classList.add('gone');
+  loadLevel(player.currentLevelId || 'level1');
+  checkInboxDot();
+  toast('Welcome back, ' + (p.name || 'Explorer') + '!');
 }
 
 function drawShapePv(ctx,x,y,sz,col,sh){
@@ -2322,6 +2448,8 @@ function drawShapePv(ctx,x,y,sz,col,sh){
 function updatePv(){ drawShapePv(document.getElementById('pkCanvas').getContext('2d'),35,35,22,pkColor,pkShape); }
 
 async function startGame(){
+  const nameVal = (document.getElementById('pkNameInput')?.value || '').trim();
+  player.name = nameVal || 'Explorer';
   player.shape=pkShape; player.color=pkColor; player.playerId='player_'+Date.now();
   document.getElementById('picker').classList.add('gone');
   transEl.classList.add('on');
