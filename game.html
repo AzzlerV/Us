@@ -784,8 +784,6 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
     <div style="font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(200,169,110,0.6);margin-bottom:24px">Select profile &amp; enter keycode</div>
     
     <div id="doorProfileList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto"></div>
-
-    <div id="doorProfileList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto"></div>
     <button class="btn" onclick="closeDoorPassModal()" style="margin-top:16px">Close</button>
   </div>
 </div>
@@ -3108,7 +3106,6 @@ let doorSelectedProf = null;
 function openDoorPassModal() {
   gs.paused = true;
   doorSelectedProf = null;
-  document.getElementById('doorPassSection').style.display = 'none';
   renderDoorProfileList();
   doorPassOv.classList.add('active');
 }
@@ -3183,7 +3180,7 @@ function renderDoorProfileList() {
         S.set('muskan_player', p);
         
         const profs = S.get('muskan_profiles', []);
-        const idx = profs.findIndex(pr => pr.id === p.id);
+        const idx = profs.findIndex(pr => pr.playerId === p.playerId);
         if(idx !== -1) { profs[idx] = p; S.set('muskan_profiles', profs); }
         
         document.getElementById('picker').classList.add('gone');
