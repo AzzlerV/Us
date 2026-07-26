@@ -603,7 +603,7 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 </div>
 
 <div id="hud">
-  <button class="hud-btn" id="editLvlBtn" title="Toggle Level Editor">
+  <button class="hud-btn" id="editLvlBtn" title="Toggle Level Editor" style="display:none">
     <span class="hud-icon">✏</span><span class="hud-lbl">Edit</span>
   </button>
   <button class="hud-btn" id="mapBtn" title="Journey Map">
@@ -3221,8 +3221,13 @@ init();
 
   // Auto-enable if preview param present
   const params = new URLSearchParams(location.search);
-  if (params.get('preview')) {
+  const preview = params.get('preview');
+  if (preview) {
+    if (editLvlBtn) editLvlBtn.style.display = 'flex';
     toggleEditMode(true);
+  } else {
+    // If we're not in preview mode, don't show the edit button at all
+    if (editLvlBtn) editLvlBtn.style.display = 'none';
   }
 
   function peGetEl() {
