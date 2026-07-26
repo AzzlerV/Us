@@ -419,7 +419,7 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 }
 #lvlTitle.on{opacity:1}
 #lvlTitleH{font-family:'Crimson Text',serif;font-size:clamp(2rem,5vw,4rem);color:#fff;letter-spacing:0.1em;text-shadow:0 0 40px rgba(255,255,255,0.2)}
-#lvlTheme{font-size:0.75rem;letter-spacing:0.38em;text-transform:uppercase;color:rgba(255,255,255,0.32);margin-top:8px}
+#lvlTheme{font-size:0.75rem;letter-spacing:0.28em;color:rgba(255,255,255,0.38);margin-top:8px}
 
 /* ── TRANSITION ── */
 #trans{position:fixed;inset:0;z-index:48;background:#000;opacity:0;pointer-events:none;transition:opacity 0.45s ease}
@@ -487,12 +487,96 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 }
 #gameToast.on{display:block;animation:toastIn 0.28s ease forwards}
 #gameToast.out{animation:toastOut 0.28s ease forwards}
+
+/* ── PREVIEW EDIT MODE ── */
+#previewBar{
+  position:fixed;top:0;left:0;right:0;height:44px;z-index:900;
+  background:rgba(8,4,16,0.96);border-bottom:1px solid rgba(139,111,245,0.4);
+  display:none;align-items:center;gap:12px;padding:0 16px;
+  backdrop-filter:blur(14px);
+  font-family:'Space Grotesk',sans-serif;
+  box-shadow:0 2px 20px rgba(139,111,245,0.25);
+}
+#previewBar.on{display:flex}
+.pbar-badge{
+  font-size:0.62rem;letter-spacing:0.3em;text-transform:uppercase;
+  color:rgba(139,111,245,0.8);border:1px solid rgba(139,111,245,0.3);
+  border-radius:12px;padding:3px 10px;white-space:nowrap;
+}
+.pbar-hint{font-size:0.66rem;letter-spacing:0.12em;color:rgba(255,255,255,0.3);white-space:nowrap}
+.pbar-spacer{flex:1}
+.pbar-btn{
+  padding:6px 14px;background:transparent;border:1px solid rgba(255,255,255,0.12);
+  border-radius:3px;color:rgba(255,255,255,0.5);cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;font-size:0.68rem;letter-spacing:0.1em;
+  text-transform:uppercase;transition:all 0.18s;white-space:nowrap;
+}
+.pbar-btn:hover{color:#fff;border-color:rgba(255,255,255,0.4)}
+.pbar-btn.accent{color:rgba(139,111,245,0.9);border-color:rgba(139,111,245,0.4)}
+.pbar-btn.accent:hover{background:rgba(139,111,245,0.12);color:#b8a0ff}
+.pbar-btn.danger:hover{color:#e05a5a;border-color:rgba(224,90,90,0.5)}
+#previewPanel{
+  position:fixed;right:0;top:44px;bottom:0;width:260px;z-index:299;
+  background:rgba(6,4,14,0.97);border-left:1px solid rgba(139,111,245,0.2);
+  display:none;flex-direction:column;overflow-y:auto;
+  backdrop-filter:blur(20px);
+  font-family:'Space Grotesk',sans-serif;
+  box-shadow:-4px 0 40px rgba(0,0,0,0.7);
+  padding-bottom:20px;
+}
+#previewPanel.on{display:flex}
+.pp-head{
+  padding:16px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size:0.6rem;letter-spacing:0.32em;text-transform:uppercase;
+  color:rgba(139,111,245,0.7);flex-shrink:0;
+}
+.pp-empty{
+  padding:24px 16px;font-family:'Crimson Text',serif;
+  font-size:0.95rem;color:rgba(255,255,255,0.2);font-style:italic;text-align:center;
+}
+.pp-row{display:flex;align-items:center;gap:8px;padding:6px 16px}
+.pp-lbl{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.3);min-width:60px;flex-shrink:0}
+.pp-input{
+  flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:3px;color:rgba(255,255,255,0.85);font-family:inherit;font-size:0.78rem;
+  padding:5px 8px;outline:none;transition:border-color 0.18s;
+}
+.pp-input:focus{border-color:rgba(139,111,245,0.5)}
+.pp-select{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,0.04);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
+.pp-divider{height:1px;background:rgba(255,255,255,0.05);margin:8px 0}
+.pp-del-btn{
+  margin:12px 16px 0;padding:8px;background:rgba(224,90,90,0.07);
+  border:1px solid rgba(224,90,90,0.2);border-radius:3px;
+  color:rgba(224,90,90,0.7);cursor:pointer;font-family:inherit;font-size:0.7rem;
+  letter-spacing:0.12em;text-transform:uppercase;transition:all 0.18s;width:calc(100% - 32px);
+}
+.pp-del-btn:hover{background:rgba(224,90,90,0.14);color:#e05a5a;border-color:rgba(224,90,90,0.5)}
+#previewSelBox{
+  position:fixed;border:2px dashed rgba(139,111,245,0.9);border-radius:3px;
+  pointer-events:none;z-index:298;display:none;
+  box-shadow:0 0 14px rgba(139,111,245,0.4);
+}
 </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
 <div id="gameToast"></div>
+
+<!-- Preview Edit Mode Bar & Panel -->
+<div id="previewBar">
+  <div class="pbar-badge">✏ Edit Mode</div>
+  <div class="pbar-hint">Click element to select · Drag to move · Alt+drag to duplicate</div>
+  <div class="pbar-spacer"></div>
+  <button class="pbar-btn accent" id="pbarAddEl">+ Add Element</button>
+  <button class="pbar-btn" id="pbarSave">Save ✓</button>
+  <button class="pbar-btn" id="pbarClose">✕ Exit Editor</button>
+</div>
+<div id="previewPanel">
+  <div class="pp-head">Element Properties</div>
+  <div id="ppBody"><div class="pp-empty">Click an element to edit it.</div></div>
+</div>
+<div id="previewSelBox"></div>
 
 <!-- HUD -->
 <!-- Level Progress Bar -->
@@ -504,6 +588,9 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 </div>
 
 <div id="hud">
+  <button class="hud-btn" id="editLvlBtn" title="Toggle Level Editor">
+    <span class="hud-icon">✏</span><span class="hud-lbl">Edit</span>
+  </button>
   <button class="hud-btn" id="mapBtn" title="Journey Map">
     <span class="hud-icon">🗺</span><span class="hud-lbl">Map</span>
   </button>
@@ -682,34 +769,33 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
     
     <div id="doorProfileList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto"></div>
 
-    <div id="doorPassSection" style="display:none;margin-top:14px">
-      <div class="pk-lbl" style="margin-bottom:8px">Enter keycode for <span id="doorProfName" style="color:#f0e6d2"></span></div>
-      <input id="doorPassInput" type="password" placeholder="Password…" autocomplete="current-password"
-        style="width:100%;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.4);
-        color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.15rem;padding:10px 0;
-        outline:none;text-align:center;letter-spacing:0.1em;transition:border-color 0.2s">
-      <div id="doorPassErr" style="font-size:0.7rem;color:#e05a5a;letter-spacing:0.12em;margin-top:8px;display:none">Incorrect keycode. Try again.</div>
-      <div style="display:flex;gap:10px;margin-top:20px;justify-content:center">
-        <button id="doorEnterBtn" style="padding:11px 32px;background:rgba(200,169,110,0.12);border:1px solid rgba(200,169,110,0.5);border-radius:3px;color:var(--ui-accent);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">Unlock &amp; Enter →</button>
-        <button id="doorCancelBtn" style="padding:11px 20px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:rgba(255,255,255,0.4);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer">← Back</button>
-      </div>
-    </div>
-
-    <div id="doorNewSection" style="margin-top:16px">
-      <button id="doorNewJourneyBtn" style="background:transparent;border:none;color:rgba(255,255,255,0.25);font-family:'Crimson Text',serif;font-size:0.95rem;letter-spacing:0.08em;cursor:pointer">+ New Journey</button>
-    </div>
+    <div id="doorProfileList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto"></div>
+    <button class="btn" onclick="closeDoorPassModal()" style="margin-top:16px">Close</button>
   </div>
 </div>
 
-<!-- Character Picker (Hidden Legacy Modal) -->
+<!-- Character Picker (Hidden Legacy Modal) repurposed for Avatar Customization -->
 <div id="picker" style="display:none">
-  <div id="pkLogin"><div id="pkProfileList"></div></div>
   <div id="pkCreate">
-    <input id="pkNameInput" type="text">
-    <div id="shapeRow"></div>
-    <div id="colorRow"></div>
-    <canvas id="pkCanvas" width="70" height="70"></canvas>
-    <button id="startBtn">Begin →</button>
+    <div style="font-family:'Crimson Text',serif;font-size:2rem;color:var(--ui-accent);margin-bottom:32px;text-align:center;letter-spacing:0.05em">Customize Avatar</div>
+    <div id="shapeRow" class="shape-row" style="justify-content:center;margin-bottom:24px"></div>
+    <div id="colorRow" class="color-row" style="justify-content:center;margin-bottom:36px;max-width:320px"></div>
+    <div style="display:flex;justify-content:center;margin-bottom:30px">
+      <div id="pkPreview"><canvas id="pkCanvas" width="70" height="70"></canvas></div>
+    </div>
+    
+    <div id="pkPassSection" style="display:none; flex-direction:column; align-items:center; margin-bottom: 30px">
+      <input id="pkPassInput" type="password" placeholder="Enter Password" autocomplete="current-password"
+        style="width:240px;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.4);
+        color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.15rem;padding:10px 0;
+        outline:none;text-align:center;letter-spacing:0.1em;transition:border-color 0.2s">
+      <div id="pkPassErr" style="font-size:0.7rem;color:#e05a5a;letter-spacing:0.12em;margin-top:8px;display:none">Incorrect password.</div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:12px">
+      <button class="btn" id="pkCancelBtn" style="padding:12px 24px">Cancel</button>
+      <button class="btn btn-accent" id="startBtn" style="padding:12px 32px">Begin →</button>
+    </div>
   </div>
 </div>
 
@@ -764,6 +850,13 @@ const S = {
     if (Array.isArray(res)) return res;
     return null;
   },
+  async saveLevel(lv){
+    const all = await this.getLevels() || [];
+    const idx = all.findIndex(l => l.id === lv.id);
+    if(idx >= 0) all[idx] = lv; else all.push(lv);
+    await this.saveLevels(all);
+  },
+  async saveLevels(lvs){ this.set('muskan_levels', { custom: true, data: lvs }); },
   async saveProgress(p){ 
     this.set('muskan_player', p); 
     if(p.playerId) {
@@ -2284,7 +2377,7 @@ function doTransition(nextId){
     setTimeout(()=>{
       loadLevel(nextId);
       document.getElementById('lvlTitleH').textContent=curLevel.title;
-      document.getElementById('lvlTheme').textContent=curLevel.theme.toUpperCase();
+      document.getElementById('lvlTheme').textContent=curLevel.subtitle||'';
       lvlTitleEl.classList.add('on');
       transEl.style.opacity='0.28';
       
@@ -2548,95 +2641,20 @@ const COLORS=['#c8a96e','#e05a5a','#5a9de0','#5ae09a','#e05ab0','#a05ae0','#e0a0
 let pkShape='circle', pkColor=COLORS[0];
 
 function initPicker(){
-  // Build profile list for login screen
-  const listEl = document.getElementById('pkProfileList');
-  const profs = S.get('muskan_profiles', []);
-  let selectedProf = null;
-
-  function renderProfileList() {
-    const profs = S.get('muskan_profiles', []);
-    listEl.innerHTML = '';
-    if (!profs || profs.length === 0) {
-      listEl.innerHTML = `<div style="color:rgba(255,255,255,0.22);font-family:'Crimson Text',serif;font-size:1rem;letter-spacing:0.08em;margin-bottom:16px;font-style:italic">No journeys found. Start a new one.</div>`;
-      return;
-    }
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:20px;max-width:340px;width:100%';
-    profs.forEach(p => {
-      const btn = document.createElement('button');
-      btn.style.cssText = `display:flex;align-items:center;gap:14px;padding:12px 16px;
-        background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
-        border-radius:3px;cursor:pointer;transition:all 0.22s;width:100%;text-align:left;`;
-      const c = document.createElement('canvas'); c.width=32; c.height=32;
-      drawShapePv(c.getContext('2d'), 16, 16, 10, p.color||'#c8a96e', p.shape||'circle');
-      const nameEl = document.createElement('div');
-      nameEl.style.cssText = 'font-family:\'Crimson Text\',serif;font-size:1.05rem;color:rgba(240,230,210,0.6);letter-spacing:0.05em;';
-      nameEl.textContent = p.name || 'Explorer';
-      btn.appendChild(c); btn.appendChild(nameEl);
-      btn.addEventListener('mouseenter', () => { btn.style.background='rgba(200,169,110,0.07)'; btn.style.borderColor='rgba(200,169,110,0.2)'; });
-      btn.addEventListener('mouseleave', () => { btn.style.background='rgba(255,255,255,0.03)'; btn.style.borderColor='rgba(255,255,255,0.06)'; });
-      btn.addEventListener('click', () => {
-        selectedProf = p;
-        // If no password set, enter directly
-        if (!p.password) {
-          enterWithProfile(p);
-        } else {
-          document.getElementById('pkPassSection').style.display = '';
-          document.getElementById('pkNewBtn').style.display = 'none';
-          document.getElementById('pkPassInput').value = '';
-          document.getElementById('pkPassErr').style.display = 'none';
-          document.getElementById('pkPassInput').focus();
-        }
-      });
-      wrap.appendChild(btn);
-    });
-    listEl.appendChild(wrap);
-  }
-
-  renderProfileList();
-
-  // Password entry
-  document.getElementById('pkEnterBtn').addEventListener('click', () => {
-    const val = document.getElementById('pkPassInput').value;
-    if (selectedProf && val === selectedProf.password) {
-      enterWithProfile(selectedProf);
-    } else {
-      document.getElementById('pkPassErr').style.display = 'block';
-      document.getElementById('pkPassInput').value = '';
-      document.getElementById('pkPassInput').focus();
-    }
-  });
-  document.getElementById('pkPassInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('pkEnterBtn').click();
-  });
-  document.getElementById('pkCancelBtn').addEventListener('click', () => {
-    document.getElementById('pkPassSection').style.display = 'none';
-    document.getElementById('pkNewBtn').style.display = '';
-    selectedProf = null;
-  });
-
-  // New profile flow
-  document.getElementById('pkNewProfileBtn').addEventListener('click', () => {
-    document.getElementById('pkLogin').style.display = 'none';
-    document.getElementById('pkCreate').style.display = '';
-    buildCreator();
-  });
-  document.getElementById('pkBackToLogin').addEventListener('click', () => {
-    document.getElementById('pkLogin').style.display = '';
-    document.getElementById('pkCreate').style.display = 'none';
-  });
-
-  document.getElementById('startBtn').addEventListener('click', startGame);
+  // Picker is now only used as avatar customizer, launched from unlockAndEnter.
+  // No login/profile-list logic needed here.
 }
 
 function buildCreator() {
   const sr = document.getElementById('shapeRow');
   const cr = document.getElementById('colorRow');
-  if (sr.childElementCount > 0) { updatePv(); return; } // already built
+  // Always rebuild so selection state reflects current pkShape/pkColor
+  sr.innerHTML = '';
+  cr.innerHTML = '';
   SHAPES.forEach(sh => {
     const btn = document.createElement('button'); btn.className = 'sh-btn' + (sh === pkShape ? ' sel' : ''); btn.dataset.shape = sh;
     const c = document.createElement('canvas'); c.width = 42; c.height = 42;
-    drawShapePv(c.getContext('2d'), 21, 21, 14, '#c8a96e', sh); btn.appendChild(c);
+    drawShapePv(c.getContext('2d'), 21, 21, 14, pkColor, sh); btn.appendChild(c);
     btn.addEventListener('click', () => { pkShape = sh; document.querySelectorAll('.sh-btn').forEach(b => b.classList.remove('sel')); btn.classList.add('sel'); updatePv(); });
     sr.appendChild(btn);
   });
@@ -2681,7 +2699,7 @@ async function startGame(){
   document.getElementById('picker').classList.add('gone');
   transEl.classList.add('on');
   document.getElementById('lvlTitleH').textContent=curLevel.title;
-  document.getElementById('lvlTheme').textContent=curLevel.theme.toUpperCase();
+  document.getElementById('lvlTheme').textContent=curLevel.subtitle||'';
   await S.saveProgress(player);
   
   const finishStart = () => {
@@ -2821,7 +2839,9 @@ let onObComplete = null;
 
 function checkOnboarding(trigger, levelId = null, callback = null) {
   const obData = S.get('muskan_onboarding', []);
-  const played = S.get('muskan_onboarding_played', []); 
+  // Per-player played key so each player's onboarding is independent
+  const playedKey = 'muskan_ob_played_' + (player.playerId || 'guest');
+  const played = S.get(playedKey, []);
   
   const seq = obData.find(s => {
     if (played.includes(s.id)) return false;
@@ -2874,9 +2894,10 @@ obNextBtn.addEventListener('click', () => {
     renderObSlide();
   } else {
     obOv.classList.remove('active');
-    const played = S.get('muskan_onboarding_played', []);
+    const playedKey = 'muskan_ob_played_' + (player.playerId || 'guest');
+    const played = S.get(playedKey, []);
     played.push(currentObSeq.id);
-    S.set('muskan_onboarding_played', played);
+    S.set(playedKey, played);
     gs.trans = false;
     if (onObComplete) {
        const cb = onObComplete;
@@ -3020,7 +3041,6 @@ function openDoorPassModal() {
   gs.paused = true;
   doorSelectedProf = null;
   document.getElementById('doorPassSection').style.display = 'none';
-  document.getElementById('doorNewSection').style.display = '';
   renderDoorProfileList();
   doorPassOv.classList.add('active');
 }
@@ -3035,7 +3055,7 @@ function renderDoorProfileList() {
   const profs = S.get('muskan_profiles', []);
   listEl.innerHTML = '';
   if (!profs || profs.length === 0) {
-    listEl.innerHTML = `<div style="color:rgba(255,255,255,0.3);font-family:'Crimson Text',serif;font-size:1rem;margin-bottom:12px;font-style:italic">No profiles found. Create a new journey below.</div>`;
+    listEl.innerHTML = `<div style="color:rgba(255,255,255,0.3);font-family:'Crimson Text',serif;font-size:1rem;margin-bottom:12px;font-style:italic">No profiles found. Ask the organizer to create one in the dashboard.</div>`;
     return;
   }
   profs.forEach(p => {
@@ -3053,59 +3073,70 @@ function renderDoorProfileList() {
     btn.addEventListener('mouseleave', () => { btn.style.background='rgba(255,255,255,0.03)'; btn.style.borderColor='rgba(255,255,255,0.08)'; });
     btn.addEventListener('click', () => {
       doorSelectedProf = p;
-      if (!p.password) {
-        unlockAndEnter(p);
+      closeDoorPassModal();
+      
+      // Show avatar customizer and password screen unified
+      document.getElementById('picker').style.display = 'flex';
+      document.getElementById('picker').classList.remove('gone');
+      
+      pkShape = p.shape || 'circle';
+      pkColor = p.color || COLORS[0];
+      buildCreator();
+      
+      const passSec = document.getElementById('pkPassSection');
+      const passIn = document.getElementById('pkPassInput');
+      const passErr = document.getElementById('pkPassErr');
+      
+      if (p.password) {
+        passSec.style.display = 'flex';
+        passIn.value = '';
+        passErr.style.display = 'none';
+        setTimeout(() => passIn.focus(), 50);
       } else {
-        document.getElementById('doorProfName').textContent = p.name || 'Explorer';
-        document.getElementById('doorPassSection').style.display = '';
-        document.getElementById('doorNewSection').style.display = 'none';
-        document.getElementById('doorPassInput').value = '';
-        document.getElementById('doorPassErr').style.display = 'none';
-        document.getElementById('doorPassInput').focus();
+        passSec.style.display = 'none';
       }
+      
+      const sb = document.getElementById('startBtn');
+      const newSb = sb.cloneNode(true);
+      sb.parentNode.replaceChild(newSb, sb);
+      
+      newSb.addEventListener('click', () => {
+        if (p.password && passIn.value !== p.password) {
+          passErr.style.display = 'block';
+          passIn.value = '';
+          passIn.focus();
+          return;
+        }
+        
+        toast('Keycode accepted! Welcome back, ' + (p.name || 'Explorer') + '!');
+        p.shape = pkShape;
+        p.color = pkColor;
+        Object.assign(player, p);
+        S.set('muskan_player', p);
+        
+        const profs = S.get('muskan_profiles', []);
+        const idx = profs.findIndex(pr => pr.id === p.id);
+        if(idx !== -1) { profs[idx] = p; S.set('muskan_profiles', profs); }
+        
+        document.getElementById('picker').classList.add('gone');
+        document.getElementById('picker').style.display = 'none';
+        
+        const targetLevel = p.currentLevelId && p.currentLevelId !== 'lobby' ? p.currentLevelId : 'level1';
+        const doTrans = () => { doTransition(targetLevel); checkInboxDot(); };
+        if (!checkOnboarding('start_game', null, doTrans)) doTrans();
+      });
+      
+      const cb = document.getElementById('pkCancelBtn');
+      const newCb = cb.cloneNode(true);
+      cb.parentNode.replaceChild(newCb, cb);
+      newCb.addEventListener('click', () => {
+        document.getElementById('picker').classList.add('gone');
+        document.getElementById('picker').style.display = 'none';
+        openDoorPassModal();
+      });
     });
     listEl.appendChild(btn);
   });
-}
-
-document.getElementById('doorEnterBtn')?.addEventListener('click', () => {
-  const val = document.getElementById('doorPassInput').value;
-  if (doorSelectedProf && val === doorSelectedProf.password) {
-    unlockAndEnter(doorSelectedProf);
-  } else {
-    document.getElementById('doorPassErr').style.display = 'block';
-    document.getElementById('doorPassInput').value = '';
-    document.getElementById('doorPassInput').focus();
-  }
-});
-
-document.getElementById('doorPassInput')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('doorEnterBtn').click();
-});
-
-document.getElementById('doorCancelBtn')?.addEventListener('click', () => {
-  document.getElementById('doorPassSection').style.display = 'none';
-  document.getElementById('doorNewSection').style.display = '';
-  doorSelectedProf = null;
-});
-
-document.getElementById('doorNewJourneyBtn')?.addEventListener('click', () => {
-  closeDoorPassModal();
-  document.getElementById('picker').style.display = '';
-  document.getElementById('picker').classList.remove('gone');
-  document.getElementById('pkLogin').style.display = 'none';
-  document.getElementById('pkCreate').style.display = '';
-  buildCreator();
-});
-
-function unlockAndEnter(p) {
-  Object.assign(player, p);
-  S.set('muskan_player', p);
-  closeDoorPassModal();
-  const targetLevel = p.currentLevelId && p.currentLevelId !== 'lobby' ? p.currentLevelId : 'level1';
-  toast('Keycode accepted! Opening door…');
-  doTransition(targetLevel);
-  checkInboxDot();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -3131,6 +3162,239 @@ async function init(){
 }
 
 init();
+
+// ════════════════════════════════════════════════════════════
+// PREVIEW EDIT MODE & HUD EDITOR TOGGLE
+// ════════════════════════════════════════════════════════════
+(function(){
+  const bar = document.getElementById('previewBar');
+  const panel = document.getElementById('previewPanel');
+  const ppBody = document.getElementById('ppBody');
+  const selBox = document.getElementById('previewSelBox');
+  const editLvlBtn = document.getElementById('editLvlBtn');
+  
+  let editActive = false;
+  let peSelId = null;
+  let peDragging = false;
+  let peDragOffX = 0, peDragOffY = 0;
+
+  const DECOS = ['tree','mushroom','bush','stone','planet','asteroid','bookshelf','lamp','bed','desk','building','streetlight','bench','coral','seaweed'];
+
+  function toggleEditMode(enable) {
+    editActive = enable;
+    if (editActive) {
+      bar.classList.add('on');
+      panel.classList.add('on');
+      document.getElementById('hud').style.top = '56px';
+      document.getElementById('levelProgressBar').style.top = '56px';
+      peRenderPanel();
+      toast('Edit Mode Active');
+    } else {
+      bar.classList.remove('on');
+      panel.classList.remove('on');
+      if (selBox) selBox.style.display = 'none';
+      document.getElementById('hud').style.top = '';
+      document.getElementById('levelProgressBar').style.top = '';
+      peSelId = null;
+      toast('Editor Closed');
+    }
+  }
+
+  if (editLvlBtn) {
+    editLvlBtn.addEventListener('click', () => toggleEditMode(!editActive));
+  }
+
+  // Auto-enable if preview param present
+  const params = new URLSearchParams(location.search);
+  if (params.get('preview')) {
+    toggleEditMode(true);
+  }
+
+  function peGetEl() {
+    if (!curLevel || !peSelId) return null;
+    return curLevel.elements.find(e => e.id === peSelId) || null;
+  }
+
+  function peSave() {
+    if (curLevel) S.saveLevel(curLevel);
+    toast('Saved!');
+  }
+
+  function peRenderPanel() {
+    const el = peGetEl();
+    if (!el) {
+      if (!curLevel) { ppBody.innerHTML = '<div class="pp-empty">No level loaded.</div>'; return; }
+      let html = `<div class="pp-row"><span class="pp-lbl">Level Title</span><input class="pp-input" id="pp_lvl_title" value="${(curLevel.title||'').replace(/"/g,'&quot;')}"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Subtitle</span><input class="pp-input" id="pp_lvl_sub" value="${(curLevel.subtitle||'').replace(/"/g,'&quot;')}"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Width</span><input class="pp-input" id="pp_lvl_w" type="number" value="${curLevel.worldWidth||3200}" step="200"></div>`;
+      html += `<div class="pp-divider"></div>`;
+      html += `<div class="pp-empty" style="font-size:0.75rem;padding:8px 0;color:rgba(255,255,255,0.4)">Click an element on screen to edit position, variant, or content.</div>`;
+      ppBody.innerHTML = html;
+
+      const bind = (id, fn) => { const el2 = document.getElementById(id); if(el2) el2.addEventListener('input', fn); };
+      bind('pp_lvl_title', e => { curLevel.title = e.target.value; S.saveLevel(curLevel); });
+      bind('pp_lvl_sub', e => { curLevel.subtitle = e.target.value; S.saveLevel(curLevel); });
+      bind('pp_lvl_w', e => { curLevel.worldWidth = parseFloat(e.target.value)||3200; S.saveLevel(curLevel); });
+      return;
+    }
+
+    let html = `<div class="pp-row"><span class="pp-lbl">Type</span><span style="font-size:0.75rem;color:rgba(139,111,245,0.9);letter-spacing:0.1em">${el.type.toUpperCase()}</span></div>`;
+    html += `<div class="pp-divider"></div>`;
+    html += `<div class="pp-row"><span class="pp-lbl">World X</span><input class="pp-input" id="pp_x" type="number" value="${Math.round(el.x)}" step="40"></div>`;
+    html += `<div class="pp-row"><span class="pp-lbl">World Y</span><input class="pp-input" id="pp_y" type="number" value="${Math.round(el.y||0)}" step="20"></div>`;
+    if (el.type === 'decoration') {
+      html += `<div class="pp-divider"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Variant</span><select class="pp-input pp-select" id="pp_variant">${DECOS.map(v => `<option value="${v}"${el.variant===v?' selected':''}>${v}</option>`).join('')}</select></div>`;
+    }
+    if (el.type === 'message' || el.type === 'image') {
+      html += `<div class="pp-divider"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Title</span><input class="pp-input" id="pp_title" value="${(el.title||'').replace(/"/g,'&quot;')}"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Content</span><textarea class="pp-input" id="pp_content" style="height:80px;resize:vertical">${el.content||''}</textarea></div>`;
+    }
+    if (el.type === 'block') {
+      html += `<div class="pp-divider"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Width</span><input class="pp-input" id="pp_w" type="number" value="${el.w||60}" step="10"></div>`;
+      html += `<div class="pp-row"><span class="pp-lbl">Height</span><input class="pp-input" id="pp_h" type="number" value="${el.h||40}" step="10"></div>`;
+    }
+    html += `<button class="pp-del-btn" id="pp_del">🗑 Delete Element</button>`;
+    ppBody.innerHTML = html;
+
+    // Live-bind inputs
+    const bind = (id, fn) => { const el2 = document.getElementById(id); if(el2) el2.addEventListener('input', fn); };
+    bind('pp_x', e => { el.x = parseFloat(e.target.value)||el.x; S.saveLevel(curLevel); });
+    bind('pp_y', e => { el.y = parseFloat(e.target.value)||0; S.saveLevel(curLevel); });
+    bind('pp_w', e => { el.w = parseFloat(e.target.value)||60; S.saveLevel(curLevel); });
+    bind('pp_h', e => { el.h = parseFloat(e.target.value)||40; S.saveLevel(curLevel); });
+    bind('pp_title', e => { el.title = e.target.value; S.saveLevel(curLevel); });
+    bind('pp_content', e => { el.content = e.target.value; S.saveLevel(curLevel); });
+    const varSel = document.getElementById('pp_variant');
+    if (varSel) varSel.addEventListener('change', e => { el.variant = e.target.value; S.saveLevel(curLevel); });
+    const delBtn = document.getElementById('pp_del');
+    if (delBtn) delBtn.addEventListener('click', () => {
+      if (!confirm('Delete this element?')) return;
+      const idx = curLevel.elements.findIndex(e => e.id === peSelId);
+      if (idx >= 0) { curLevel.elements.splice(idx, 1); S.saveLevel(curLevel); }
+      peSelId = null; if(selBox) selBox.style.display = 'none'; peRenderPanel();
+    });
+  }
+
+  function peUpdateSelBox(el) {
+    if (!el || !editActive) { if(selBox) selBox.style.display = 'none'; return; }
+    const sx = ws(el.x);
+    const sy = GY + (el.y || 0);
+    const bx = sx - 36, by = sy - 60, bw = 72, bh = 66;
+    selBox.style.display = 'block';
+    selBox.style.left = bx + 'px';
+    selBox.style.top = by + 'px';
+    selBox.style.width = bw + 'px';
+    selBox.style.height = bh + 'px';
+  }
+
+  // Update sel box every frame
+  setInterval(() => {
+    if (!editActive) return;
+    const el = peGetEl();
+    if (el) peUpdateSelBox(el);
+  }, 50);
+
+  // Canvas interaction
+  const cv2 = document.getElementById('gameCanvas');
+
+  cv2.addEventListener('mousedown', e => {
+    if (!editActive || gs.dialog || gs.paused || gs.map) return;
+    const rect = cv2.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+
+    // Find nearest element within 70px
+    let best = null, bestDist = 70;
+    if (curLevel && curLevel.elements) {
+      curLevel.elements.forEach(el => {
+        const esx = ws(el.x);
+        const esy = GY + (el.y || 0) - 30;
+        const dist = Math.sqrt((esx-sx)**2 + (esy-sy)**2);
+        if (dist < bestDist) { best = el; bestDist = dist; }
+      });
+    }
+
+    if (best) {
+      e.stopPropagation();
+      if (e.altKey) {
+        // Alt+click = duplicate
+        const clone = {...JSON.parse(JSON.stringify(best)), id: 'el_'+Date.now()+'_pdup'};
+        clone.x += 80;
+        curLevel.elements.push(clone);
+        peSelId = clone.id;
+        best = clone;
+        toast('Duplicated!');
+      } else {
+        peSelId = best.id;
+      }
+      peDragging = true;
+      peDragOffX = sx - ws(best.x);
+      peDragOffY = sy - (GY + (best.y || 0));
+      peRenderPanel();
+    } else {
+      peSelId = null;
+      if(selBox) selBox.style.display = 'none';
+      peRenderPanel();
+    }
+  }, true);
+
+  cv2.addEventListener('mousemove', e => {
+    if (!editActive || !peDragging || !peSelId) return;
+    const rect = cv2.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const el = peGetEl(); if (!el) return;
+    el.x = Math.round((sx - peDragOffX + camX) / 40) * 40;
+    el.y = Math.round((sy - peDragOffY - GY) / 20) * 20;
+    // Update panel inputs live
+    const xIn = document.getElementById('pp_x'); if(xIn) xIn.value = Math.round(el.x);
+    const yIn = document.getElementById('pp_y'); if(yIn) yIn.value = Math.round(el.y);
+    peUpdateSelBox(el);
+  }, true);
+
+  cv2.addEventListener('mouseup', e => {
+    if (editActive && peDragging && peSelId && curLevel) S.saveLevel(curLevel);
+    peDragging = false;
+  }, true);
+
+  // Toolbar buttons
+  document.getElementById('pbarSave').addEventListener('click', peSave);
+  document.getElementById('pbarClose').addEventListener('click', () => toggleEditMode(false));
+  document.getElementById('pbarAddEl').addEventListener('click', () => {
+    if (!curLevel) return;
+    const types = ['message','decoration','block','exit'];
+    const type = prompt('Element type:\n' + types.join(', '), 'decoration');
+    if (!types.includes(type)) { toast('Unknown type'); return; }
+    const wx = Math.round((camX + W * 0.5) / 40) * 40;
+    const el = { id: 'el_'+Date.now(), type, x: wx, y: 0 };
+    if (type === 'message') { el.title = 'New Message'; el.content = 'Enter content here.'; }
+    if (type === 'decoration') { el.variant = 'tree'; el.scale = 1; }
+    if (type === 'block') { el.w = 70; el.h = 45; el.color = '#3d2e1f'; }
+    if (type === 'exit') { el.nextLevelId = null; }
+    curLevel.elements.push(el);
+    peSelId = el.id;
+    S.saveLevel(curLevel);
+    peRenderPanel();
+    toast('Element added!');
+  });
+
+  // Keyboard shortcuts in preview mode
+  document.addEventListener('keydown', e => {
+    if (!editActive) return;
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (e.key === 'Escape') { peSelId = null; if(selBox) selBox.style.display = 'none'; peRenderPanel(); }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && peSelId && curLevel) {
+      e.preventDefault();
+      const idx = curLevel.elements.findIndex(el => el.id === peSelId);
+      if (idx >= 0) { curLevel.elements.splice(idx, 1); S.saveLevel(curLevel); }
+      peSelId = null; if(selBox) selBox.style.display = 'none'; peRenderPanel();
+    }
+  });
+})();
 </script>
 </body>
 </html>

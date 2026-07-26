@@ -633,6 +633,68 @@ let dragOffX = 0;
 let dragOffY = 0;
 let dragStartX = 0;
 let activeTab = 'props';
+let clipboardEl = null; // for copy/paste
+
+// ════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  // Ignore shortcuts when typing in an input/textarea
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  const lv = curLv();
+  if (!lv) return;
+
+  // Delete / Backspace → delete selected element
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selElId) {
+    e.preventDefault();
+    const idx = lv.elements.findIndex(el => el.id === selElId);
+    if (idx >= 0) {
+      lv.elements.splice(idx, 1);
+      selElId = null;
+      S.saveLevel(lv);
+      renderProps();
+      renderEditor();
+    }
+    return;
+  }
+
+  // Ctrl+C → copy selected element
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selElId) {
+    e.preventDefault();
+    const el = lv.elements.find(el => el.id === selElId);
+    if (el) { clipboardEl = JSON.parse(JSON.stringify(el)); showToast('Element copied'); }
+    return;
+  }
+
+  // Ctrl+V → paste copied element
+  if ((e.ctrlKey || e.metaKey) && e.key === 'v' && clipboardEl) {
+    e.preventDefault();
+    const pasted = { ...JSON.parse(JSON.stringify(clipboardEl)), id: 'el_' + Date.now(), x: clipboardEl.x + 80 };
+    lv.elements.push(pasted);
+    selElId = pasted.id;
+    S.saveLevel(lv);
+    renderProps();
+    renderEditor();
+    showToast('Element pasted');
+    return;
+  }
+});
+
+function showToast(msg) {
+  let t = document.getElementById('dashToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'dashToast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(139,111,245,0.92);color:#fff;padding:10px 22px;border-radius:4px;font-size:12px;letter-spacing:0.1em;z-index:9999;pointer-events:none;transition:opacity 0.4s;opacity:0';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.style.opacity = '0', 1800);
+}
 
 const EDITOR_H = 420; // canvas height in pixels
 
@@ -809,8 +871,19 @@ ec.addEventListener('mousedown', e => {
     // Find clicked element
     const clicked=findElAt(lv,wx,sy,GY);
     if(clicked){
-      selElId=clicked.id; editorDragging=true; dragOffX=wx-clicked.x; dragOffY=sy-(GY+(clicked.y||0)); dragStartX=clicked.x;
-      renderProps(); renderEditor();
+      if(e.altKey){
+        // Alt+drag = duplicate: clone element with new ID, offset slightly, start dragging clone
+        e.preventDefault();
+        const clone={...JSON.parse(JSON.stringify(clicked)), id:'el_'+Date.now()+'_dup'};
+        clone.x += 80;
+        lv.elements.push(clone);
+        selElId=clone.id; editorDragging=true; dragOffX=wx-clone.x; dragOffY=sy-(GY+(clone.y||0)); dragStartX=clone.x;
+        S.saveLevel(lv); renderProps(); renderEditor();
+        showToast('Duplicated — drag to place');
+      } else {
+        selElId=clicked.id; editorDragging=true; dragOffX=wx-clicked.x; dragOffY=sy-(GY+(clicked.y||0)); dragStartX=clicked.x;
+        renderProps(); renderEditor();
+      }
     } else { selElId=null; renderProps(); }
   } else {
     // Place new element
@@ -976,6 +1049,8 @@ function renderProps(){
       <div class="prop-title">Level Settings</div>
       <div class="prop-row"><label class="prop-lbl">Title</label>
         <input class="prop-input" id="propLvlTitle" value="${esc(lv.title)}"></div>
+      <div class="prop-row"><label class="prop-lbl">Subtitle</label>
+        <input class="prop-input" id="propLvlSubtitle" value="${esc(lv.subtitle||'')}" placeholder="Shown below level title…"></div>
       <div class="prop-row"><label class="prop-lbl">Theme</label>
         <select class="prop-select" id="propLvlTheme">
           ${['forest','space','bedroom','city','ocean',
@@ -1050,6 +1125,7 @@ function renderProps(){
   // Level setting listeners
   document.getElementById('saveLvlBtn').addEventListener('click',()=>{
     lv.title=document.getElementById('propLvlTitle').value.trim()||lv.title;
+    lv.subtitle=document.getElementById('propLvlSubtitle').value.trim();
     lv.theme=document.getElementById('propLvlTheme').value;
     lv.worldWidth=parseInt(document.getElementById('propLvlWidth').value)||lv.worldWidth;
     lv.isVisible=document.getElementById('propLvlVisible').checked;
@@ -1121,6 +1197,14 @@ function renderProps(){
     document.getElementById('propY').addEventListener('input',e=>{
       el.y=parseInt(e.target.value)||0; renderEditor();
     });
+    // Live decoration variant change — no Apply needed
+    if(el.type==='decoration'){
+      document.getElementById('propVariant').addEventListener('change',e=>{
+        el.variant=e.target.value;
+        S.saveLevel(lv);
+        renderEditor();
+      });
+    }
   }
 }
 
@@ -1649,7 +1733,7 @@ document.getElementById('openGameBtn').addEventListener('click',()=>window.open(
 
 document.getElementById('previewBtn').addEventListener('click',()=>{
   if(!curLvlId){ showToast('Select a level first'); return; }
-  window.open(`game.html?preview=${curLvlId}`,'_blank');
+  window.open(`game.html?preview=${curLvlId}&v=${Date.now()}`,'_blank');
 });
 
 document.getElementById('publishBtn').addEventListener('click',async()=>{
