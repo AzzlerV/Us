@@ -53,6 +53,10 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 #touchControls {
   position: fixed; inset: 0; pointer-events: none; z-index: 80;
   touch-action: none; user-select: none; -webkit-user-select: none;
+  display: none;
+}
+@media (max-width: 800px), (hover: none) and (pointer: coarse) {
+  #touchControls { display: block; }
 }
 #actionBtn {
   position: absolute; bottom: 28px; left: 28px;
