@@ -1729,22 +1729,27 @@ function dSeaweed(x,sh=100){
 // ── MESSAGE NODE ──
 function drawMsgNode(el,sx){
   const p=0.5+0.5*Math.sin(animT*2.1+el.x*0.001);
-  // Floating bob: oscillates gently up and down
   const floatY = Math.sin(animT*1.35 + el.x*0.007) * 7;
   const ny=GY-52 + floatY;
   const r=13+p*4;
   const near=Math.abs(player.worldX-el.x)<75;
   const read=player.messagesRead.includes(el.id);
-  const acol=el.isSecret?'#9060ff':'#60c0ff';
-  cx.shadowBlur=near?28+p*18:18; cx.shadowColor=acol;
+  // Urgent pulse when _pulse is set (player tried to exit without reading)
+  const urgentP = el._pulse ? 0.5+0.5*Math.sin(animT*8) : 0;
+  const acol = el._pulse ? `rgba(255,${100+urgentP*80|0},50,0.9)` : (el.isSecret?'#9060ff':'#60c0ff');
+  cx.shadowBlur=(el._pulse?40+urgentP*30 : near?28+p*18:18); cx.shadowColor=acol;
   const og=cx.createRadialGradient(sx,ny,0,sx,ny,r);
-  og.addColorStop(0,el.isSecret?'rgba(155,95,255,0.9)':'rgba(96,200,255,0.9)');
-  og.addColorStop(1,el.isSecret?'rgba(75,35,160,0.25)':'rgba(28,78,160,0.25)');
+  if(el._pulse){
+    og.addColorStop(0,`rgba(255,${100+urgentP*80|0},50,0.95)`);
+    og.addColorStop(1,'rgba(180,40,10,0.25)');
+  } else {
+    og.addColorStop(0,el.isSecret?'rgba(155,95,255,0.9)':'rgba(96,200,255,0.9)');
+    og.addColorStop(1,el.isSecret?'rgba(75,35,160,0.25)':'rgba(28,78,160,0.25)');
+  }
   cx.fillStyle=og; cx.beginPath(); cx.arc(sx,ny,r,0,Math.PI*2); cx.fill();
-  cx.shadowBlur=0; cx.strokeStyle=el.isSecret?'rgba(175,125,255,0.55)':'rgba(125,215,255,0.55)';
+  cx.shadowBlur=0; cx.strokeStyle=el._pulse?`rgba(255,160,80,0.7)`:(el.isSecret?'rgba(175,125,255,0.55)':'rgba(125,215,255,0.55)');
   cx.lineWidth=1; cx.beginPath(); cx.arc(sx,ny,r*0.55,0,Math.PI*2); cx.stroke();
   if(read){cx.globalAlpha=0.38;cx.fillStyle='#80ff80';cx.font='9px sans-serif';cx.textAlign='center';cx.fillText('✓',sx,ny+3);cx.globalAlpha=1;}
-  // Tether line from bottom of orb to ground, with opacity fade
   cx.strokeStyle=el.isSecret?'rgba(110,55,255,0.22)':'rgba(55,145,255,0.22)';
   cx.lineWidth=1; cx.setLineDash([3,6]);
   cx.beginPath(); cx.moveTo(sx,ny+r); cx.lineTo(sx,GY); cx.stroke(); cx.setLineDash([]);
@@ -1753,11 +1758,12 @@ function drawMsgNode(el,sx){
 // ── IMAGE NODE ──
 function drawImgNode(el,sx){
   const p=0.5+0.5*Math.sin(animT*1.6+el.x*0.001);
-  // Floating bob: offset phase from message nodes
   const floatY = Math.sin(animT*1.2 + el.x*0.007 + 1.2) * 8;
   const ny=GY-52 + floatY;
   const r=15+p*4;
-  cx.shadowBlur=24+p*14; cx.shadowColor='#ffc060';
+  const urgentP = el._pulse ? 0.5+0.5*Math.sin(animT*8) : 0;
+  cx.shadowBlur=(el._pulse?40+urgentP*30:24+p*14);
+  cx.shadowColor=el._pulse?`rgba(255,${100+urgentP*80|0},50,0.9)`:'#ffc060';
   cx.fillStyle=`rgba(${215+p*40|0},${165+p*18|0},75,0.88)`;
   cx.beginPath(); cx.moveTo(sx,ny-r); cx.lineTo(sx+r,ny); cx.lineTo(sx,ny+r); cx.lineTo(sx-r,ny); cx.closePath(); cx.fill();
   cx.shadowBlur=0; cx.strokeStyle='rgba(255,215,125,0.48)'; cx.lineWidth=1;
@@ -1864,6 +1870,19 @@ function interact(){
   if(n.type==='message') showDialog(n);
   else if(n.type==='image') showImg(n);
   else if(n.type==='exit'){
+    // Check all messages & images on this level have been read
+    const required = curLevel.elements.filter(el =>
+      (el.type==='message' || el.type==='image') && !el.isSecret
+    );
+    const unread = required.filter(el => !player.messagesRead.includes(el.id));
+    if(unread.length > 0){
+      const count = unread.length;
+      toast(`${count} moment${count>1?'s':''} still unread — find them first`);
+      // Mark unread elements to pulse so player can spot them
+      unread.forEach(el => { el._pulse = true; });
+      setTimeout(() => unread.forEach(el => { delete el._pulse; }), 4000);
+      return;
+    }
     if(n.nextLevelId) doTransition(n.nextLevelId);
     else showDialog({title:'You have reached the end.',content:'Thank you for walking through.\n\nThe journey continues\nin the spaces between.'});
   }
