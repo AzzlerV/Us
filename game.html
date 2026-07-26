@@ -674,61 +674,42 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 <!-- Transition overlay -->
 <div id="trans"></div>
 
-<!-- Entry Screen -->
-<div id="picker">
-  <!-- ── Step 1: Login / Profile Select ── -->
-  <div id="pkLogin">
-    <div class="pk-title">Muskan</div>
-    <div class="pk-sub">An atmospheric journey</div>
-    <div id="pkProfileList"></div>
-    <div id="pkPassSection" style="display:none">
-      <div class="pk-lbl" style="margin-bottom:8px">Enter your password</div>
-      <input id="pkPassInput" type="password" placeholder="Password…" autocomplete="current-password"
-        style="width:100%;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.3);
-        color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.1rem;padding:10px 0;
-        outline:none;letter-spacing:0.06em;transition:border-color 0.2s;max-width:340px">
-      <div id="pkPassErr" style="font-size:0.7rem;color:#e05a5a;letter-spacing:0.12em;margin-top:8px;display:none">Incorrect password. Try again.</div>
-      <div style="display:flex;gap:10px;margin-top:18px">
-        <button id="pkEnterBtn" style="padding:11px 28px;background:rgba(200,169,110,0.1);border:1px solid rgba(200,169,110,0.45);border-radius:2px;color:var(--ui-accent);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">Enter →</button>
-        <button id="pkCancelBtn" style="padding:11px 20px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(255,255,255,0.35);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">← Back</button>
+<!-- Sanctuary Door Password Overlay -->
+<div class="overlay" id="doorPassOv" style="z-index:210">
+  <div style="background:var(--dialog-bg);border:1px solid rgba(200,169,110,0.35);border-radius:6px;padding:36px 40px;width:min(440px,92vw);box-shadow:0 0 100px rgba(0,0,0,0.95), 0 0 30px var(--ui-glow);text-align:center;">
+    <div style="font-size:1.8rem;font-family:'Crimson Text',serif;color:#f0e6d2;margin-bottom:4px;font-style:italic">Sanctuary Gate</div>
+    <div style="font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(200,169,110,0.6);margin-bottom:24px">Select profile &amp; enter keycode</div>
+    
+    <div id="doorProfileList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto"></div>
+
+    <div id="doorPassSection" style="display:none;margin-top:14px">
+      <div class="pk-lbl" style="margin-bottom:8px">Enter keycode for <span id="doorProfName" style="color:#f0e6d2"></span></div>
+      <input id="doorPassInput" type="password" placeholder="Password…" autocomplete="current-password"
+        style="width:100%;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.4);
+        color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.15rem;padding:10px 0;
+        outline:none;text-align:center;letter-spacing:0.1em;transition:border-color 0.2s">
+      <div id="doorPassErr" style="font-size:0.7rem;color:#e05a5a;letter-spacing:0.12em;margin-top:8px;display:none">Incorrect keycode. Try again.</div>
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:center">
+        <button id="doorEnterBtn" style="padding:11px 32px;background:rgba(200,169,110,0.12);border:1px solid rgba(200,169,110,0.5);border-radius:3px;color:var(--ui-accent);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">Unlock &amp; Enter →</button>
+        <button id="doorCancelBtn" style="padding:11px 20px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:rgba(255,255,255,0.4);font-family:'Space Grotesk',sans-serif;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer">← Back</button>
       </div>
     </div>
-    <div id="pkNewBtn" style="margin-top:4px">
-      <button style="background:transparent;border:none;color:rgba(255,255,255,0.2);font-family:'Crimson Text',serif;font-size:0.9rem;letter-spacing:0.1em;cursor:pointer;padding:4px 0;transition:color 0.2s" id="pkNewProfileBtn">+ New Journey</button>
+
+    <div id="doorNewSection" style="margin-top:16px">
+      <button id="doorNewJourneyBtn" style="background:transparent;border:none;color:rgba(255,255,255,0.25);font-family:'Crimson Text',serif;font-size:0.95rem;letter-spacing:0.08em;cursor:pointer">+ New Journey</button>
     </div>
   </div>
+</div>
 
-  <!-- ── Step 2: New Player character creation ── -->
-  <div id="pkCreate" style="display:none">
-    <div class="pk-title">Begin</div>
-    <div class="pk-sub">Create your presence</div>
-    <div class="pk-wrap">
-      <div>
-        <div class="pk-lbl">Your name</div>
-        <input id="pkNameInput" type="text" placeholder="Enter a name…" autocomplete="off"
-          style="width:100%;background:rgba(255,255,255,0.04);border:none;border-bottom:1px solid rgba(200,169,110,0.25);
-          color:#f0e6d2;font-family:'Crimson Text',serif;font-size:1.1rem;padding:10px 0;
-          outline:none;letter-spacing:0.06em;transition:border-color 0.2s">
-      </div>
-      <div>
-        <div class="pk-lbl">Choose your shape</div>
-        <div class="shape-row" id="shapeRow"></div>
-      </div>
-      <div>
-        <div class="pk-lbl">Choose your color</div>
-        <div class="color-row" id="colorRow"></div>
-      </div>
-      <div id="pkPreviewWrap">
-        <div>
-          <div class="pk-lbl" style="margin-bottom:8px">Preview</div>
-          <div id="pkPreview"><canvas id="pkCanvas" width="70" height="70"></canvas></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button id="startBtn">Begin →</button>
-          <button id="pkBackToLogin" style="background:transparent;border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:2px;color:rgba(255,255,255,0.3);font-family:'Space Grotesk',sans-serif;font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer">← Back</button>
-        </div>
-      </div>
-    </div>
+<!-- Character Picker (Hidden Legacy Modal) -->
+<div id="picker" style="display:none">
+  <div id="pkLogin"><div id="pkProfileList"></div></div>
+  <div id="pkCreate">
+    <input id="pkNameInput" type="text">
+    <div id="shapeRow"></div>
+    <div id="colorRow"></div>
+    <canvas id="pkCanvas" width="70" height="70"></canvas>
+    <button id="startBtn">Begin →</button>
   </div>
 </div>
 
@@ -1557,6 +1538,7 @@ function drawElements(lv){
       case 'image':      drawImgNode(el,sx); break;
       case 'exit':       drawExit(el,sx); break;
       case 'block':      drawBlock(el,sx); break;
+      case 'door':       drawDoor(el,sx); break;
     }
     cx.restore();
   });
@@ -1948,6 +1930,59 @@ function drawPlayer(){
   cx.restore();
 }
 
+// ── LOBBY DOOR ──
+function drawDoor(el, sx){
+  const p = 0.5 + 0.5 * Math.sin(animT * 2);
+  const dW = 74, dH = 125, dy = GY - dH;
+  cx.save();
+
+  // Aura glow behind door
+  const aura = cx.createRadialGradient(sx, dy + dH/2, 10, sx, dy + dH/2, 95);
+  aura.addColorStop(0, `rgba(200,169,110,${0.28 + p * 0.15})`);
+  aura.addColorStop(1, 'transparent');
+  cx.fillStyle = aura; cx.fillRect(sx - 100, dy - 35, 200, dH + 70);
+
+  // Archway frame
+  cx.shadowBlur = 25 + p * 15; cx.shadowColor = '#c8a96e';
+  cx.strokeStyle = `rgba(200,169,110,${0.75 + p * 0.25})`; cx.lineWidth = 3;
+  cx.beginPath();
+  cx.moveTo(sx - dW/2, GY);
+  cx.lineTo(sx - dW/2, dy + dW/2);
+  cx.arc(sx, dy + dW/2, dW/2, Math.PI, 0);
+  cx.lineTo(sx + dW/2, GY);
+  cx.stroke();
+
+  // Inner door panel fill
+  const intGrad = cx.createLinearGradient(sx, dy, sx, GY);
+  intGrad.addColorStop(0, 'rgba(22,18,36,0.96)');
+  intGrad.addColorStop(1, 'rgba(6,4,14,0.98)');
+  cx.fillStyle = intGrad;
+  cx.beginPath();
+  cx.moveTo(sx - dW/2 + 3, GY);
+  cx.lineTo(sx - dW/2 + 3, dy + dW/2);
+  cx.arc(sx, dy + dW/2, dW/2 - 3, Math.PI, 0);
+  cx.lineTo(sx + dW/2 - 3, GY);
+  cx.fill();
+
+  // Glowing Keyhole Emblem
+  cx.shadowBlur = 18; cx.shadowColor = '#c8a96e';
+  cx.fillStyle = 'rgba(200,169,110,0.95)';
+  cx.beginPath(); cx.arc(sx, dy + dH * 0.44, 9, 0, Math.PI * 2); cx.fill();
+  cx.beginPath();
+  cx.moveTo(sx - 4, dy + dH * 0.44);
+  cx.lineTo(sx + 4, dy + dH * 0.44);
+  cx.lineTo(sx + 6, dy + dH * 0.62);
+  cx.lineTo(sx - 6, dy + dH * 0.62);
+  cx.closePath(); cx.fill();
+
+  // Title text floating above door
+  cx.shadowBlur = 0; cx.fillStyle = 'rgba(200,169,110,0.9)';
+  cx.font = '10px Space Grotesk, sans-serif'; cx.textAlign = 'center';
+  cx.fillText('SANCTUARY DOOR 🔑', sx, dy - 14);
+
+  cx.restore();
+}
+
 // ════════════════════════════════════════════════════════════
 // INTERACTION
 // ════════════════════════════════════════════════════════════
@@ -1955,7 +1990,7 @@ const hintEl=document.getElementById('hint');
 
 function getNear(){
   if(!curLevel) return null;
-  return curLevel.elements.find(el=>(el.type==='message'||el.type==='image'||el.type==='exit')&&Math.abs(player.worldX-el.x)<70&&Math.abs((player.yOff||0)-(-(el.y||0)))<80);
+  return curLevel.elements.find(el=>(el.type==='message'||el.type==='image'||el.type==='exit'||el.type==='door')&&Math.abs(player.worldX-el.x)<70&&Math.abs((player.yOff||0)-(-(el.y||0)))<80);
 }
 
 function updateHint(){
@@ -1968,6 +2003,8 @@ function updateHint(){
       hintEl.textContent = unread.length > 0
         ? `Read all moments first (${unread.length} left)`
         : (isTouchDevice() ? 'Tap ✕ to continue' : 'Press Space');
+    } else if(n.type==='door'){
+      hintEl.textContent = isTouchDevice() ? 'Tap ✕ to enter keycode' : 'Press Space to enter keycode';
     } else {
       hintEl.textContent = isTouchDevice() ? 'Tap ✕ to read' : 'Press Space';
     }
@@ -1979,6 +2016,9 @@ function interact(){
   const n=getNear(); if(!n) return;
   if(n.type==='message') showDialog(n);
   else if(n.type==='image') showImg(n);
+  else if(n.type==='door'){
+    openDoorPassModal();
+  }
   else if(n.type==='exit'){
     // Check all messages & images on this level have been read
     const required = curLevel.elements.filter(el =>
@@ -2264,8 +2304,20 @@ function doTransition(nextId){
 }
 
 // ════════════════════════════════════════════════════════════
-// LEVELS
+// LOBBY & LEVELS
 // ════════════════════════════════════════════════════════════
+const LOBBY_LEVEL = {
+  id: 'lobby', index: -1, title: 'The Entrance Lobby', theme: 'forest', isVisible: false, worldWidth: 2000,
+  elements: [
+    { id: 'l_d1', type: 'decoration', variant: 'tree', x: 260, scale: 1.4 },
+    { id: 'l_d2', type: 'decoration', variant: 'bush', x: 500, w: 90 },
+    { id: 'l_d3', type: 'decoration', variant: 'tree', x: 820, scale: 1.2 },
+    { id: 'l_d4', type: 'decoration', variant: 'bush', x: 1100, w: 100 },
+    { id: 'l_msg', type: 'message', x: 450, title: 'The Threshold', content: 'Walk right to the Sanctuary Door\nand present your Keycode to enter.' },
+    { id: 'lobby_door', type: 'door', x: 1350, title: 'Sanctuary Door' }
+  ]
+};
+
 let levels=[], curLevel=null;
 
 async function initLevels(){
@@ -2274,7 +2326,11 @@ async function initLevels(){
 }
 
 function loadLevel(id){
-  curLevel=levels.find(l=>l.id===id)||levels[0];
+  if (id === 'lobby') {
+    curLevel = LOBBY_LEVEL;
+  } else {
+    curLevel = levels.find(l=>l.id===id) || levels[0];
+  }
   player.worldX=200; camX=0;
   initPtcls(curLevel.theme);
 }
@@ -2945,6 +3001,104 @@ function handleActionPress() {
 }
 
 // ════════════════════════════════════════════════════════════
+// SANCTUARY DOOR PASSWORD MODAL FLOW
+// ════════════════════════════════════════════════════════════
+const doorPassOv = document.getElementById('doorPassOv');
+let doorSelectedProf = null;
+
+function openDoorPassModal() {
+  gs.paused = true;
+  doorSelectedProf = null;
+  document.getElementById('doorPassSection').style.display = 'none';
+  document.getElementById('doorNewSection').style.display = '';
+  renderDoorProfileList();
+  doorPassOv.classList.add('active');
+}
+
+function closeDoorPassModal() {
+  gs.paused = false;
+  doorPassOv.classList.remove('active');
+}
+
+function renderDoorProfileList() {
+  const listEl = document.getElementById('doorProfileList');
+  const profs = S.get('muskan_profiles', []);
+  listEl.innerHTML = '';
+  if (!profs || profs.length === 0) {
+    listEl.innerHTML = `<div style="color:rgba(255,255,255,0.3);font-family:'Crimson Text',serif;font-size:1rem;margin-bottom:12px;font-style:italic">No profiles found. Create a new journey below.</div>`;
+    return;
+  }
+  profs.forEach(p => {
+    const btn = document.createElement('button');
+    btn.style.cssText = `display:flex;align-items:center;gap:14px;padding:12px 16px;
+      background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+      border-radius:4px;cursor:pointer;transition:all 0.22s;width:100%;text-align:left;`;
+    const c = document.createElement('canvas'); c.width=32; c.height=32;
+    drawShapePv(c.getContext('2d'), 16, 16, 10, p.color||'#c8a96e', p.shape||'circle');
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-family:\'Crimson Text\',serif;font-size:1.15rem;color:rgba(240,230,210,0.8);letter-spacing:0.04em;';
+    nameEl.textContent = p.name || 'Explorer';
+    btn.appendChild(c); btn.appendChild(nameEl);
+    btn.addEventListener('mouseenter', () => { btn.style.background='rgba(200,169,110,0.12)'; btn.style.borderColor='rgba(200,169,110,0.35)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.background='rgba(255,255,255,0.03)'; btn.style.borderColor='rgba(255,255,255,0.08)'; });
+    btn.addEventListener('click', () => {
+      doorSelectedProf = p;
+      if (!p.password) {
+        unlockAndEnter(p);
+      } else {
+        document.getElementById('doorProfName').textContent = p.name || 'Explorer';
+        document.getElementById('doorPassSection').style.display = '';
+        document.getElementById('doorNewSection').style.display = 'none';
+        document.getElementById('doorPassInput').value = '';
+        document.getElementById('doorPassErr').style.display = 'none';
+        document.getElementById('doorPassInput').focus();
+      }
+    });
+    listEl.appendChild(btn);
+  });
+}
+
+document.getElementById('doorEnterBtn')?.addEventListener('click', () => {
+  const val = document.getElementById('doorPassInput').value;
+  if (doorSelectedProf && val === doorSelectedProf.password) {
+    unlockAndEnter(doorSelectedProf);
+  } else {
+    document.getElementById('doorPassErr').style.display = 'block';
+    document.getElementById('doorPassInput').value = '';
+    document.getElementById('doorPassInput').focus();
+  }
+});
+
+document.getElementById('doorPassInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('doorEnterBtn').click();
+});
+
+document.getElementById('doorCancelBtn')?.addEventListener('click', () => {
+  document.getElementById('doorPassSection').style.display = 'none';
+  document.getElementById('doorNewSection').style.display = '';
+  doorSelectedProf = null;
+});
+
+document.getElementById('doorNewJourneyBtn')?.addEventListener('click', () => {
+  closeDoorPassModal();
+  document.getElementById('picker').style.display = '';
+  document.getElementById('picker').classList.remove('gone');
+  document.getElementById('pkLogin').style.display = 'none';
+  document.getElementById('pkCreate').style.display = '';
+  buildCreator();
+});
+
+function unlockAndEnter(p) {
+  Object.assign(player, p);
+  S.set('muskan_player', p);
+  closeDoorPassModal();
+  const targetLevel = p.currentLevelId && p.currentLevelId !== 'lobby' ? p.currentLevelId : 'level1';
+  toast('Keycode accepted! Opening door…');
+  doTransition(targetLevel);
+  checkInboxDot();
+}
+
+// ════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════
 async function init(){
@@ -2953,17 +3107,15 @@ async function init(){
   await initLevels();
   const params=new URLSearchParams(location.search);
   const preview=params.get('preview');
-  const saved=await S.loadProgress('local');
-  if(saved&&saved.playerId){
-    Object.assign(player,saved);
+  
+  if (preview) {
     document.getElementById('picker').classList.add('gone');
-    loadLevel(preview||player.currentLevelId||'level1');
-    if(preview){player.worldX=200;camX=0;}
-    checkInboxDot();
+    loadLevel(preview);
   } else {
-    loadLevel(preview||'level1');
-    initPicker();
-    transEl.style.opacity='0.7'; // darken canvas behind picker
+    // Visitors ALWAYS enter in the Entrance Lobby!
+    document.getElementById('picker').classList.add('gone');
+    loadLevel('lobby');
+    toast('Welcome. Walk right to the Sanctuary Door.');
   }
   requestAnimationFrame(loop);
 }
