@@ -1753,6 +1753,13 @@ function dSeaweed(x,sh=100){
   cx.stroke(); cx.shadowBlur=0;
 }
 
+// ── ELEMENT ID SCOPING ──
+function getElUid(lvl, el) {
+  if (!el || !el.id) return '';
+  const lvlId = lvl ? lvl.id : (curLevel ? curLevel.id : 'level1');
+  return el.id.startsWith(lvlId + '_') ? el.id : (lvlId + '_' + el.id);
+}
+
 // ── MESSAGE NODE ──
 function drawMsgNode(el,sx){
   const p=0.5+0.5*Math.sin(animT*2.1+el.x*0.001);
@@ -1760,8 +1767,8 @@ function drawMsgNode(el,sx){
   const ny=GY-52 + floatY;
   const r=13+p*4;
   const near=Math.abs(player.worldX-el.x)<75;
-  const read=player.messagesRead.includes(el.id);
-  // Urgent pulse when _pulse is set (player tried to exit without reading)
+  const uid = getElUid(curLevel, el);
+  const read = player.messagesRead.includes(uid);
   const urgentP = el._pulse ? 0.5+0.5*Math.sin(animT*8) : 0;
   const acol = el._pulse ? `rgba(255,${100+urgentP*80|0},50,0.9)` : (el.isSecret?'#9060ff':'#60c0ff');
   cx.shadowBlur=(el._pulse?40+urgentP*30 : near?28+p*18:18); cx.shadowColor=acol;
@@ -1783,21 +1790,76 @@ function drawMsgNode(el,sx){
 }
 
 // ── IMAGE NODE ──
+const imgCache = {};
+function getCachedImg(url) {
+  if (!url) return null;
+  if (!imgCache[url]) {
+    const img = new Image();
+    img.src = url;
+    imgCache[url] = img;
+  }
+  return imgCache[url];
+}
+
 function drawImgNode(el,sx){
+  const url = el.url || el.src || el.image;
   const p=0.5+0.5*Math.sin(animT*1.6+el.x*0.001);
   const floatY = Math.sin(animT*1.2 + el.x*0.007 + 1.2) * 8;
-  const ny=GY-52 + floatY;
-  const r=15+p*4;
+  const ny=GY-60 + floatY;
+  const w=56, h=42, radius=6;
+  const rx=sx-w/2, ry=ny-h/2;
   const urgentP = el._pulse ? 0.5+0.5*Math.sin(animT*8) : 0;
-  cx.shadowBlur=(el._pulse?40+urgentP*30:24+p*14);
-  cx.shadowColor=el._pulse?`rgba(255,${100+urgentP*80|0},50,0.9)`:'#ffc060';
-  cx.fillStyle=`rgba(${215+p*40|0},${165+p*18|0},75,0.88)`;
-  cx.beginPath(); cx.moveTo(sx,ny-r); cx.lineTo(sx+r,ny); cx.lineTo(sx,ny+r); cx.lineTo(sx-r,ny); cx.closePath(); cx.fill();
-  cx.shadowBlur=0; cx.strokeStyle='rgba(255,215,125,0.48)'; cx.lineWidth=1;
-  cx.beginPath(); cx.moveTo(sx,ny-r*0.48); cx.lineTo(sx+r*0.48,ny); cx.lineTo(sx,ny+r*0.48); cx.lineTo(sx-r*0.48,ny); cx.closePath(); cx.stroke();
-  // Tether
-  cx.strokeStyle='rgba(255,200,75,0.22)'; cx.setLineDash([3,6]);
-  cx.beginPath(); cx.moveTo(sx,ny+r); cx.lineTo(sx,GY); cx.stroke(); cx.setLineDash([]);
+  
+  cx.save();
+  cx.shadowBlur=(el._pulse?40+urgentP*30:26+p*14);
+  cx.shadowColor=el._pulse?`rgba(255,${100+urgentP*80|0},50,0.9)`:(el.isSecret?'#9060ff':'#ffc060');
+
+  // Background card
+  cx.fillStyle='rgba(12, 12, 24, 0.92)';
+  cx.beginPath();
+  if (cx.roundRect) cx.roundRect(rx, ry, w, h, radius); else cx.rect(rx, ry, w, h);
+  cx.fill();
+
+  // Thumbnail rendering
+  const img = getCachedImg(url);
+  if (img && img.complete && img.naturalWidth > 0) {
+    cx.save();
+    cx.beginPath();
+    if (cx.roundRect) cx.roundRect(rx+3, ry+3, w-6, h-6, radius-2); else cx.rect(rx+3, ry+3, w-6, h-6);
+    cx.clip();
+    cx.drawImage(img, rx+3, ry+3, w-6, h-6);
+    cx.restore();
+  } else {
+    // Glowing photo frame placeholder
+    cx.fillStyle='rgba(255, 200, 110, 0.12)';
+    cx.fillRect(rx+3, ry+3, w-6, h-6);
+    cx.font='16px sans-serif'; cx.textAlign='center';
+    cx.fillText('🖼️', sx, ny+5);
+  }
+
+  // Border frame
+  cx.shadowBlur=0;
+  cx.strokeStyle=el._pulse?'rgba(255,160,80,0.8)':(el.isSecret?'rgba(175,125,255,0.6)':'rgba(255, 215, 125, 0.6)');
+  cx.lineWidth=1.5;
+  cx.beginPath();
+  if (cx.roundRect) cx.roundRect(rx, ry, w, h, radius); else cx.rect(rx, ry, w, h);
+  cx.stroke();
+
+  // Read status badge
+  const uid = getElUid(curLevel, el);
+  const read = player.messagesRead.includes(uid);
+  if (read) {
+    cx.globalAlpha=0.85; cx.fillStyle='#80ff80';
+    cx.beginPath(); cx.arc(sx+w/2-2, ry+2, 7, 0, Math.PI*2); cx.fill();
+    cx.fillStyle='#000'; cx.font='bold 9px sans-serif'; cx.textAlign='center';
+    cx.fillText('✓', sx+w/2-2, ry+5);
+    cx.globalAlpha=1;
+  }
+
+  // Tether line down to ground
+  cx.strokeStyle='rgba(255,200,75,0.25)'; cx.lineWidth=1; cx.setLineDash([3,6]);
+  cx.beginPath(); cx.moveTo(sx, ry+h); cx.lineTo(sx, GY); cx.stroke(); cx.setLineDash([]);
+  cx.restore();
 }
 
 // ── EXIT PORTAL ──
@@ -1888,9 +1950,8 @@ function updateHint(){
   if(n&&!gs.dialog&&!gs.paused&&!gs.trans&&!gs.imgModal){
     hintEl.style.left=ws(n.x)+'px'; hintEl.style.top=(GY+(n.y||0)-82)+'px';
     if(n.type==='exit'){
-      // Check if there are unread messages
       const required = curLevel.elements.filter(el=>(el.type==='message'||el.type==='image')&&!el.isSecret);
-      const unread = required.filter(el=>!player.messagesRead.includes(el.id));
+      const unread = required.filter(el=>!player.messagesRead.includes(getElUid(curLevel, el)));
       hintEl.textContent = unread.length > 0
         ? `Read all moments first (${unread.length} left)`
         : (isTouchDevice() ? 'Tap ✕ to continue' : 'Press Space');
@@ -1910,14 +1971,19 @@ function interact(){
     const required = curLevel.elements.filter(el =>
       (el.type==='message' || el.type==='image') && !el.isSecret
     );
-    const unread = required.filter(el => !player.messagesRead.includes(el.id));
+    const unread = required.filter(el => !player.messagesRead.includes(getElUid(curLevel, el)));
     if(unread.length > 0){
       const count = unread.length;
       toast(`${count} moment${count>1?'s':''} still unread — find them first`);
-      // Mark unread elements to pulse so player can spot them
       unread.forEach(el => { el._pulse = true; });
       setTimeout(() => unread.forEach(el => { delete el._pulse; }), 4000);
       return;
+    }
+    // Update player highest level progress
+    const curIdx = levels.findIndex(l => l.id === curLevel.id);
+    if (curIdx >= (player.highestLevelIndex || 0)) {
+      player.highestLevelIndex = curIdx + 1;
+      S.saveProgress(player);
     }
     if(n.nextLevelId) doTransition(n.nextLevelId);
     else showDialog({title:'You have reached the end.',content:'Thank you for walking through.\n\nThe journey continues\nin the spaces between.'});
@@ -1940,7 +2006,8 @@ function showDialog(el){
   dlgFull=el.content||''; dialogContent.textContent=''; dialogTitleEl.textContent=el.title||'';
   document.getElementById('dialogCursor').style.display='inline-block';
   dialogBox.classList.add('active'); dialogTyping=true;
-  if(el.id&&!player.messagesRead.includes(el.id)){player.messagesRead.push(el.id);S.saveProgress(player);}
+  const uid = getElUid(curLevel, el);
+  if(uid && !player.messagesRead.includes(uid)){player.messagesRead.push(uid);S.saveProgress(player);}
   updateSaveButtons();
   clearInterval(dlgInterval); let i=0;
   dlgInterval=setInterval(()=>{
@@ -1976,7 +2043,8 @@ function showImg(el){
     container.innerHTML=makeSVG(el.imageType||'book');
   }
   imgOv.classList.add('active');
-  if(el.id&&!player.messagesRead.includes(el.id)){player.messagesRead.push(el.id);S.saveProgress(player);}
+  const uid = getElUid(curLevel, el);
+  if(uid && !player.messagesRead.includes(uid)){player.messagesRead.push(uid);S.saveProgress(player);}
   updateSaveButtons();
 }
 function closeImg(){ gs.imgModal=false; imgOv.classList.remove('active'); }
@@ -2283,32 +2351,58 @@ function closeMap(){
   gs.map = false; mapOv.classList.remove('active'); if(gs.paused) pauseOv.classList.add('active');
 }
 
+const THEME_ICONS = {
+  forest: '🌲', space: '🌌', bedroom: '🛌', city: '🏙️', ocean: '🌊',
+  vanilla_sky: '🌅', rose_garden: '🌹', lavender_fields: '🪻', peach_blossom: '🌸',
+  bathroom_mirror: '🪞', balcony_at_dusk: '🌇', under_the_quilt: '🌙', dressing_table: '💄',
+  ammas_kitchen: '🫖', first_rains: '🌧️', late_night_call: '📞', unsent_drafts: '✉️',
+  braid_day: '💇', jhumka_hunt: '💎', mango_stains: '🥭', dance_practice: '💃'
+};
+
 function renderMap(){
   const content = document.getElementById('mapContent');
+  const visibleLevels = levels.filter(l=>l.isVisible);
   const maxUnlocked = Math.max(player.highestLevelIndex || 0, levels.findIndex(l=>l.id===player.currentLevelId));
 
-  content.innerHTML = levels.filter(l=>l.isVisible).map((lvl, idx) => {
+  // Duolingo winding path layout
+  const offsets = [0, 48, 80, 48, 0, -48, -80, -48];
+
+  let html = `
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;padding:24px 0 36px;gap:56px;">
+  `;
+
+  visibleLevels.forEach((lvl, idx) => {
     const isUnlocked = idx <= maxUnlocked;
     const isCurrent = lvl.id === player.currentLevelId;
+    const icon = THEME_ICONS[lvl.theme] || '📍';
+    const offsetX = offsets[idx % offsets.length];
 
-    return `
-      <div style="border:1px solid ${isCurrent?'var(--ui-accent)':'var(--ui-border)'};background:${isCurrent?'rgba(200,169,110,0.08)':'rgba(255,255,255,0.02)'};border-radius:4px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:${isUnlocked?'var(--ui-accent)':'var(--ui-muted)'}">
-            Level ${idx+1} — ${lvl.theme.toUpperCase()} ${isCurrent?'<span style="color:#5ae09a;margin-left:6px;">[Current]</span>':''}
+    html += `
+      <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;transform:translateX(${offsetX}px);transition:transform 0.3s ease;">
+        ${isCurrent ? `<div style="position:absolute;top:-16px;background:#5ae09a;color:#041008;font-family:'Space Grotesk',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.18em;padding:2px 9px;border-radius:10px;box-shadow:0 2px 10px rgba(90,224,154,0.5);z-index:3;">CURRENT</div>` : ''}
+        <button class="${isUnlocked ? 'map-warp-btn' : ''}" data-id="${lvl.id}" ${!isUnlocked ? 'disabled' : ''}
+          style="width:68px;height:68px;border-radius:50%;border:3px solid ${isCurrent?'#5ae09a':(isUnlocked?'rgba(200,169,110,0.5)':'rgba(255,255,255,0.08)')};
+          background:${isCurrent?'rgba(16,40,24,0.92)':(isUnlocked?'rgba(22,18,36,0.92)':'rgba(10,10,18,0.8)')};
+          box-shadow:${isCurrent?'0 0 30px rgba(90,224,154,0.4), inset 0 0 15px rgba(90,224,154,0.2)':(isUnlocked?'0 6px 24px rgba(0,0,0,0.6), inset 0 0 15px rgba(200,169,110,0.12)':'none')};
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          cursor:${isUnlocked?'pointer':'not-allowed'};opacity:${isUnlocked?1:0.4};transition:all 0.25s ease;position:relative;">
+          <span style="font-size:22px;line-height:1;">${icon}</span>
+          <span style="font-size:10px;font-family:'Space Grotesk',sans-serif;color:${isCurrent?'#5ae09a':'var(--ui-accent)'};font-weight:500;margin-top:2px;">${idx+1}</span>
+        </button>
+        <div style="margin-top:8px;text-align:center;max-width:140px;">
+          <div style="font-family:'Crimson Text',serif;font-size:1.05rem;color:${isUnlocked?'#f0e6d2':'var(--ui-muted)'};line-height:1.2;">
+            ${isUnlocked ? esc(lvl.title) : '🔒 Locked'}
           </div>
-          <div style="font-family:'Crimson Text',serif;font-size:1.2rem;color:${isUnlocked?'var(--ui-text)':'var(--ui-muted)'}">
-            ${isUnlocked ? esc(lvl.title) : '🔒 Locked Level'}
+          <div style="font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(200,169,110,0.5);margin-top:2px;">
+            ${lvl.theme.replace(/_/g,' ')}
           </div>
-        </div>
-        <div>
-          ${isUnlocked ? 
-            `<button class="btn btn-accent map-warp-btn" data-id="${lvl.id}" style="padding:6px 14px;font-size:0.7rem;">${isCurrent?'Here':'Warp →'}</button>` 
-            : `<span style="font-size:0.7rem;color:var(--ui-muted);padding:6px 10px;border:1px solid var(--ui-border);border-radius:3px;">🔒 Locked</span>`}
         </div>
       </div>
     `;
-  }).join('');
+  });
+
+  html += `</div>`;
+  content.innerHTML = html;
 
   content.querySelectorAll('.map-warp-btn').forEach(btn => {
     btn.addEventListener('click', () => {
