@@ -95,7 +95,7 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 }
 
 @media (max-width: 768px) {
-  #dialogBox { bottom: 120px; }
+  #dialogBox { bottom: 210px; }
   #hud { top: 12px; right: 12px; }
   .hud-btn { height: 38px; padding: 0 12px; font-size: 0.65rem; }
   #actionBtn { bottom: 22px; left: 22px; width: 70px; height: 70px; }
@@ -1860,7 +1860,16 @@ function updateHint(){
   const n=getNear();
   if(n&&!gs.dialog&&!gs.paused&&!gs.trans&&!gs.imgModal){
     hintEl.style.left=ws(n.x)+'px'; hintEl.style.top=(GY+(n.y||0)-82)+'px';
-    hintEl.textContent = isTouchDevice() ? 'Tap ✕ to read' : 'Press Space';
+    if(n.type==='exit'){
+      // Check if there are unread messages
+      const required = curLevel.elements.filter(el=>(el.type==='message'||el.type==='image')&&!el.isSecret);
+      const unread = required.filter(el=>!player.messagesRead.includes(el.id));
+      hintEl.textContent = unread.length > 0
+        ? `Read all moments first (${unread.length} left)`
+        : (isTouchDevice() ? 'Tap ✕ to continue' : 'Press Space');
+    } else {
+      hintEl.textContent = isTouchDevice() ? 'Tap ✕ to read' : 'Press Space';
+    }
     hintEl.classList.add('on');
   } else hintEl.classList.remove('on');
 }
