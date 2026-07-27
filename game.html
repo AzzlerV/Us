@@ -2870,7 +2870,8 @@ function updateProgressBar(){
   const txt=document.getElementById('levelProgressText');
   if(!bar||!curLevel) return;
   const startX=200;
-  const endX=Math.max(startX+100,(curLevel.worldWidth||3200)-300);
+  const exitEl = curLevel.elements.find(e => e.type === 'exit');
+  const endX = exitEl ? exitEl.x : Math.max(startX+100,(curLevel.worldWidth||3200)-300);
   const pct=Math.max(0,Math.min(1,(player.worldX-startX)/(endX-startX)));
   const pctVal = Math.round(pct * 100);
   bar.style.width=pctVal+'%';
