@@ -2803,21 +2803,14 @@ async function startGame(){
   player.name = nameVal || 'Explorer';
   player.shape=pkShape; player.color=pkColor; player.playerId='player_'+Date.now();
   document.getElementById('picker').classList.add('gone');
-  transEl.classList.add('on');
-  document.getElementById('lvlTitleH').textContent=curLevel.title;
-  document.getElementById('lvlTheme').textContent=curLevel.subtitle||'';
   await S.saveProgress(player);
   
-  const finishStart = () => {
-    setTimeout(()=>{
-      lvlTitleEl.classList.add('on');
-      transEl.style.opacity='0.25';
-      setTimeout(()=>{ lvlTitleEl.classList.remove('on'); transEl.classList.remove('on'); transEl.style.opacity=''; },1900);
-    },200);
-  };
+  // Check start_game onboarding first, then transition to first real level
+  const firstLevelId = levels[0] ? levels[0].id : 'level1';
+  const goToLevel = () => { doTransition(firstLevelId); checkInboxDot(); };
   
-  if (!checkOnboarding('start_game', null, finishStart)) {
-    finishStart();
+  if (!checkOnboarding('start_game', null, goToLevel)) {
+    goToLevel();
   }
 }
 
@@ -3266,7 +3259,11 @@ function renderDoorProfileList() {
         document.getElementById('picker').classList.add('gone');
         document.getElementById('picker').style.display = 'none';
         
-        const targetLevel = p.currentLevelId && p.currentLevelId !== 'lobby' ? p.currentLevelId : 'level1';
+        const savedLevel = p.currentLevelId && p.currentLevelId !== 'lobby' ? p.currentLevelId : null;
+        // Resolve to actual level ID — fall back to first real level if saved ID doesn't exist
+        const targetLevel = (savedLevel && levels.find(l => l.id === savedLevel))
+          ? savedLevel
+          : (levels[0] ? levels[0].id : 'level1');
         const doTrans = () => { doTransition(targetLevel); checkInboxDot(); };
         if (!checkOnboarding('start_game', null, doTrans)) doTrans();
       });
