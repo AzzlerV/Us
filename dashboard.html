@@ -1100,14 +1100,17 @@ function renderProps(){
       html+=`<div class="prop-row"><label class="prop-lbl">Content / Caption</label><textarea class="prop-input prop-textarea" id="propContent">${esc(el.content||'')}</textarea></div>`;
     }
     if(el.type==='image'){
-      html+=`<div class="prop-row"><label class="prop-lbl">Preset Icon</label>
+      html+=`<div class="prop-row"><label class="prop-lbl">Preset Icon <span style="font-size:9px;opacity:0.5">(used only if no image uploaded)</span></label>
         <select class="prop-select" id="propImgType">
           <option value="book"${el.imageType==='book'?' selected':''}>Book</option>
           <option value="creature"${el.imageType==='creature'?' selected':''}>Creature</option>
+          <option value="scroll"${el.imageType==='scroll'?' selected':''}>Scroll</option>
+          <option value="photo"${el.imageType==='photo'?' selected':''}>Photo</option>
+          <option value="letter"${el.imageType==='letter'?' selected':''}>Letter</option>
         </select></div>`;
-      html+=`<div class="prop-row"><label class="prop-lbl">Upload Custom Image File</label><input type="file" id="propImgFile" accept="image/*" class="prop-input" style="padding:4px"></div>`;
+      html+=`<div class="prop-row"><label class="prop-lbl">Upload Custom Image</label><input type="file" id="propImgFile" accept="image/*" class="prop-input" style="padding:4px"></div>`;
       if(el.imageUrl){
-        html+=`<div style="margin-top:6px;text-align:center;"><img src="${el.imageUrl}" style="max-width:100%;max-height:110px;border-radius:3px;border:1px solid var(--border);"/><br><button class="del-btn" id="clearImgBtn" style="padding:4px;font-size:9px;margin-top:4px">Remove Uploaded Image</button></div>`;
+        html+=`<div style="margin-top:6px;text-align:center;"><div style="font-size:9px;color:#7ab8ff;margin-bottom:4px">✓ Custom image active — preset icon ignored</div><img src="${el.imageUrl}" style="max-width:100%;max-height:110px;border-radius:3px;border:1px solid var(--border);"/><br><button class="del-btn" id="clearImgBtn" style="padding:4px;font-size:9px;margin-top:4px">Remove Uploaded Image</button></div>`;
       }
     }
     if(el.type==='exit'){

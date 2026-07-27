@@ -1940,7 +1940,7 @@ function getCachedImg(url) {
 }
 
 function drawImgNode(el,sx){
-  const url = el.url || el.src || el.image;
+  const url = el.imageUrl || el.url || el.src || el.image;
   const p=0.5+0.5*Math.sin(animT*1.6+el.x*0.001);
   const floatY = Math.sin(animT*1.2 + el.x*0.007 + 1.2) * 8;
   const ny=GY-60 + floatY;
