@@ -854,6 +854,7 @@ const S = {
       let firstLoad = true;
       db.ref('/').on('value', snap => {
         this.cloud = snap.val() || {};
+        this._cloudLoaded = true;
         if (firstLoad) {
           firstLoad = false;
           resolve(); // Resolves on first load
@@ -3144,11 +3145,23 @@ function closeDoorPassModal() {
 
 function renderDoorProfileList() {
   const listEl = document.getElementById('doorProfileList');
-  const profs = S.get('muskan_profiles', []);
+  let profs = S.get('muskan_profiles', null);
   listEl.innerHTML = '';
-  if (!profs || profs.length === 0) {
-    listEl.innerHTML = `<div style="color:rgba(255,255,255,0.3);font-family:'Crimson Text',serif;font-size:1rem;margin-bottom:12px;font-style:italic">No profiles found. Ask the organizer to create one in the dashboard.</div>`;
+  
+  if (profs === null && !S._cloudLoaded) {
+    listEl.innerHTML = `<div style="color:rgba(255,255,255,0.7);font-family:'Space Grotesk',sans-serif;font-size:0.9rem;text-align:center;padding:20px;">Connecting to Sanctuary...<br><span style="font-size:0.7rem;color:var(--ui-muted);margin-top:8px;display:block;">(This may take a moment on slow connections)</span></div>`;
     return;
+  }
+  
+  if (!profs || profs.length === 0) {
+    // Generate a default profile so they can enter the game
+    const active = S.get('muskan_player', null);
+    if(active && active.playerId){
+      profs = [{ ...active, name: active.name || 'Player 1' }];
+    } else {
+      profs = [{ playerId: 'player_' + Date.now(), name: 'Explorer 1', shape: 'circle', color: '#c8a96e', currentLevelId: 'level1', highestLevelIndex: 0, lastPositionX: 200, messagesRead: [], savedMemories: [] }];
+    }
+    S.set('muskan_profiles', profs);
   }
   profs.forEach(p => {
     const btn = document.createElement('button');
