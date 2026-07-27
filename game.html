@@ -626,8 +626,8 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 
 <!-- Touch Controls (Mobile) -->
 <div id="touchControls">
-  <div id="actionBtn" title="Interact">
-    <span class="act-icon" style="font-size:28px;font-style:normal;font-family:'Space Grotesk',sans-serif;color:rgba(200,169,110,0.9)">✕</span>
+  <div id="actionBtn" title="Jump">
+    <span class="act-icon" style="font-size:28px;font-style:normal;font-family:'Space Grotesk',sans-serif;color:rgba(200,169,110,0.9)">↑</span>
   </div>
   <div id="joystickBase">
     <div id="joystickStick"></div>
@@ -2183,11 +2183,11 @@ function updateHint(){
       const unread = required.filter(el=>!player.messagesRead.includes(getElUid(curLevel, el)));
       hintEl.textContent = unread.length > 0
         ? `Read all moments first (${unread.length} left)`
-        : (isTouchDevice() ? 'Tap ✕ to continue' : 'Press Space');
+        : (isTouchDevice() ? 'Tap to continue' : 'Press Space');
     } else if(n.type==='door'){
-      hintEl.textContent = isTouchDevice() ? 'Tap ✕ to enter keycode' : 'Press Space to enter keycode';
+      hintEl.textContent = isTouchDevice() ? 'Tap to enter' : 'Press Space to enter keycode';
     } else {
-      hintEl.textContent = isTouchDevice() ? 'Tap ✕ to read' : 'Press Space';
+      hintEl.textContent = isTouchDevice() ? 'Tap to read' : 'Press Space';
     }
     hintEl.classList.add('on');
   } else hintEl.classList.remove('on');
@@ -3079,6 +3079,24 @@ function initTouchControls() {
   const stopActionBtn = () => { actionBtn.classList.remove('active-touch'); };
   actionBtn.addEventListener('pointerup', stopActionBtn);
   actionBtn.addEventListener('pointercancel', stopActionBtn);
+
+  // Tap on canvas to interact with nearby element
+  cv.addEventListener('touchend', e => {
+    if (gs.dialog || gs.imgModal || gs.paused || gs.trans || gs.map || gs.journal || gs.inbox || gs.avatar) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    // Only interact if the touch is near an element on screen
+    const near = getNear();
+    if (near) {
+      const elScreenX = ws(near.x);
+      const elScreenY = GY + (near.y || 0);
+      const dist = Math.hypot(touch.clientX - elScreenX, touch.clientY - elScreenY);
+      if (dist < 120) {
+        e.preventDefault();
+        interact();
+      }
+    }
+  }, { passive: false });
 }
 
 function updateJoystickPos(clientX, clientY) {
@@ -3120,23 +3138,24 @@ function updateJoystickPos(clientX, clientY) {
 }
 
 function handleActionPress() {
-  if (gs.dialog) {
-    dialogTyping ? completeTyping() : closeDialog();
-    return;
-  }
-  if (gs.imgModal) {
-    closeImg();
-    return;
-  }
-  if (gs.map || gs.journal || gs.inbox || gs.avatar) return;
-  if (!gs.paused && !gs.trans) {
-    const near = getNear();
-    if (near) {
-      interact();
-    } else if (player.isGrounded) {
+  // On mobile, action button is JUMP only
+  if (isTouchDevice()) {
+    if (gs.dialog) { dialogTyping ? completeTyping() : closeDialog(); return; }
+    if (gs.imgModal) { closeImg(); return; }
+    if (gs.map || gs.journal || gs.inbox || gs.avatar) return;
+    if (!gs.paused && !gs.trans && player.isGrounded) {
       player.vy = -480;
       player.isGrounded = false;
     }
+    return;
+  }
+  // Desktop: interact or jump
+  if (gs.dialog) { dialogTyping ? completeTyping() : closeDialog(); return; }
+  if (gs.imgModal) { closeImg(); return; }
+  if (gs.map || gs.journal || gs.inbox || gs.avatar) return;
+  if (!gs.paused && !gs.trans) {
+    const near = getNear();
+    if (near) { interact(); } else if (player.isGrounded) { player.vy = -480; player.isGrounded = false; }
   }
 }
 
