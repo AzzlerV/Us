@@ -1870,9 +1870,24 @@ async function init(){
     S.saveLevels(levels);
   }
 
+  // ── Sync all localStorage data to the new Firebase DB ──
+  // Only pushes if the key is missing from Firebase (cloud is empty for it)
+  const syncIfMissing = (key) => {
+    if (S.cloud[key] === undefined) {
+      try {
+        const local = localStorage.getItem(key);
+        if (local) { const v = JSON.parse(local); S.set(key, v); }
+      } catch(_) {}
+    }
+  };
+  syncIfMissing('muskan_onboarding');
+  syncIfMissing('muskan_messages');
+
   // Ensure profiles are synced to cloud
   const existingProfs = S.getProfiles();
-  if (existingProfs && existingProfs.length > 0) S.set('muskan_profiles', existingProfs);
+  if (existingProfs && existingProfs.length > 0 && S.cloud['muskan_profiles'] === undefined) {
+    S.set('muskan_profiles', existingProfs);
+  }
 
   // Check for unread inbox messages
   const msgs=S.get('muskan_messages',[]);
