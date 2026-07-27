@@ -850,12 +850,31 @@ const S = {
   },
   async initCloud() {
     return new Promise(resolve => {
+      let firstLoad = true;
       db.ref('/').on('value', snap => {
         this.cloud = snap.val() || {};
-        resolve(); // Resolves on first load
+        if (firstLoad) {
+          firstLoad = false;
+          resolve(); // Resolves on first load
+        } else {
+          // Data arrived late (after timeout), update levels dynamically
+          if (typeof initLevels === 'function') {
+            initLevels().then(() => {
+              // Refresh door modal if it is open
+              if (typeof doorPassOv !== 'undefined' && doorPassOv && doorPassOv.classList.contains('active')) {
+                if (typeof renderDoorProfileList === 'function') renderDoorProfileList();
+              }
+            });
+          }
+        }
       });
-      // Fallback if offline
-      setTimeout(resolve, 8000); 
+      // Fallback if offline or extremely slow
+      setTimeout(() => {
+        if (firstLoad) {
+          firstLoad = false;
+          resolve(); 
+        }
+      }, 3000); 
     });
   },
   async getLevels(){ 
