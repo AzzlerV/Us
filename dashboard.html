@@ -1867,6 +1867,10 @@ async function init(){
   } else {
     levels = DEFAULT_LEVELS;
   }
+  
+  // Force sync from localStorage to the new Firebase DB
+  S.set('muskan_levels', levels);
+  S.set('muskan_profiles', S.getProfiles());
 
   // Check for unread inbox messages
   const msgs=S.get('muskan_messages',[]);
