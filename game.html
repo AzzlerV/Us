@@ -845,6 +845,7 @@ const db = firebase.database();
 // ════════════════════════════════════════════════════════════
 const S = {
   cloud: {},
+  _cloudPromise: null,
   get(k, fb=null) { 
     if (this.cloud[k] !== undefined) return JSON.parse(JSON.stringify(this.cloud[k]));
     try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb} 
@@ -855,7 +856,7 @@ const S = {
     if (db) db.ref(k).set(v);
   },
   async initCloud() {
-    return new Promise(resolve => {
+    this._cloudPromise = new Promise(resolve => {
       let firstLoad = true;
       db.ref('/').on('value', snap => {
         this.cloud = snap.val() || {};
@@ -884,10 +885,12 @@ const S = {
       setTimeout(() => {
         if (firstLoad) {
           firstLoad = false;
-          resolve(); 
+          this._cloudLoaded = true;
+          resolve();
         }
-      }, 3000); 
+      }, 4000);
     });
+    return this._cloudPromise;
   },
   async getLevels(){ 
     const res = this.get('muskan_levels'); 
@@ -1079,7 +1082,6 @@ let player = {
 const K = {};
 let inputLocked = false;
 document.addEventListener('keydown', e => {
-  if (typeof triggerCloudInit === 'function') triggerCloudInit();
   if(!K[e.key]) handleKeyDown(e.key);
   K[e.key] = true;
 });
@@ -2522,6 +2524,8 @@ const LOBBY_LEVEL = {
 let levels=[], curLevel=null;
 
 async function initLevels(){
+  // Wait for Firebase to respond before deciding on levels
+  if (S._cloudPromise) await S._cloudPromise;
   const remote=await S.getLevels();
   if (remote !== null && remote !== undefined) {
     levels = remote;
@@ -3028,9 +3032,6 @@ const Y_JUMP_THRESHOLD = -26;
 
 function initTouchControls() {
   if (!isTouchDevice()) return;
-  document.addEventListener('touchstart', e => {
-    if (typeof triggerCloudInit === 'function') triggerCloudInit();
-  }, {passive: true, once: true});
   
   if (!joystickBase || !actionBtn) return;
 
@@ -3267,15 +3268,10 @@ function renderDoorProfileList() {
 // ════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════
-let _cloudInitTriggered = false;
-function triggerCloudInit() {
-  if (!_cloudInitTriggered) {
-    _cloudInitTriggered = true;
-    S.initCloud();
-  }
-}
-
 async function init(){
+  // Start Firebase connection immediately (just a websocket, very fast)
+  // Don't await — let it run in background and update levels when data arrives
+  S.initCloud();
   initTouchControls();
   await initLevels();
   const params=new URLSearchParams(location.search);
