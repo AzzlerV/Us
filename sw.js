@@ -19,11 +19,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // We want to force network fetch and bypass cache for HTML/JS/CSS, 
-  // but we can just use a simple network-first or network-only strategy.
-  // Using cache: 'no-store' forces the browser to skip the HTTP cache.
-  event.respondWith(
-    fetch(event.request, { cache: 'no-store' })
-      .catch(() => fetch(event.request))
-  );
+  if (event.request.method !== 'GET') return;
+  
+  const url = new URL(event.request.url);
+  if (url.origin === location.origin) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .catch(() => fetch(event.request))
+    );
+  }
 });
