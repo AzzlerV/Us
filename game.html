@@ -1063,6 +1063,7 @@ let player = {
 const K = {};
 let inputLocked = false;
 document.addEventListener('keydown', e => {
+  if (typeof triggerCloudInit === 'function') triggerCloudInit();
   if(!K[e.key]) handleKeyDown(e.key);
   K[e.key] = true;
 });
@@ -3010,6 +3011,11 @@ const X_DEADZONE = 8;
 const Y_JUMP_THRESHOLD = -26;
 
 function initTouchControls() {
+  if (!isTouchDevice()) return;
+  document.addEventListener('touchstart', e => {
+    if (typeof triggerCloudInit === 'function') triggerCloudInit();
+  }, {passive: true, once: true});
+  
   if (!joystickBase || !actionBtn) return;
 
   joystickBase.addEventListener('pointerdown', e => {
@@ -3227,8 +3233,15 @@ function renderDoorProfileList() {
 // ════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════
+let _cloudInitTriggered = false;
+function triggerCloudInit() {
+  if (!_cloudInitTriggered) {
+    _cloudInitTriggered = true;
+    S.initCloud();
+  }
+}
+
 async function init(){
-  await S.initCloud();
   initTouchControls();
   await initLevels();
   const params=new URLSearchParams(location.search);
