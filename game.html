@@ -122,7 +122,8 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 }
 
 @media (max-width: 768px) {
-  #dialogBox { bottom: 210px; }
+  #dialogBox { bottom: auto; top: 60px; }
+  .overlay { align-items: flex-start; padding-top: 60px; }
   #hud { top: 12px; right: 12px; }
   .hud-btn { height: 38px; padding: 0 12px; font-size: 0.65rem; }
   #actionBtn { bottom: 22px; left: 22px; width: 70px; height: 70px; }
@@ -3533,10 +3534,12 @@ init();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=' + new Date().getTime()).catch(err => {
-      console.log('ServiceWorker registration failed: ', err);
-    });
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.unregister();
+    }
+  }).catch(function(err) {
+    console.log('Service Worker unregistration failed: ', err);
   });
 }
 </script>
