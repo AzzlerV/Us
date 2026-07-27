@@ -1866,11 +1866,13 @@ async function init(){
     levels = remote;
   } else {
     levels = DEFAULT_LEVELS;
+    // Push defaults to Firebase so mobile gets something
+    S.saveLevels(levels);
   }
-  
-  // Force sync from localStorage to the new Firebase DB
-  S.set('muskan_levels', levels);
-  S.set('muskan_profiles', S.getProfiles());
+
+  // Ensure profiles are synced to cloud
+  const existingProfs = S.getProfiles();
+  if (existingProfs && existingProfs.length > 0) S.set('muskan_profiles', existingProfs);
 
   // Check for unread inbox messages
   const msgs=S.get('muskan_messages',[]);

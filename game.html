@@ -864,9 +864,14 @@ const S = {
           firstLoad = false;
           resolve(); // Resolves on first load
         } else {
-          // Data arrived late (after timeout), update levels dynamically
+          // Firebase data arrived after initial load — re-sync levels
           if (typeof initLevels === 'function') {
             initLevels().then(() => {
+              // If player is inside a custom level, reload it to get updated content
+              if (curLevel && curLevel.id !== 'lobby') {
+                const refreshed = levels.find(l => l.id === curLevel.id);
+                if (refreshed) { curLevel = refreshed; }
+              }
               // Refresh door modal if it is open
               if (typeof doorPassOv !== 'undefined' && doorPassOv && doorPassOv.classList.contains('active')) {
                 if (typeof renderDoorProfileList === 'function') renderDoorProfileList();
@@ -887,7 +892,11 @@ const S = {
   async getLevels(){ 
     const res = this.get('muskan_levels'); 
     if (res && typeof res === 'object' && res.custom !== undefined) return res.data;
-    if (Array.isArray(res)) return res;
+    if (Array.isArray(res)) {
+      // Plain array stored (legacy format) — normalize and re-save in correct wrapper
+      this.set('muskan_levels', { custom: true, data: res });
+      return res;
+    }
     return null;
   },
   async saveLevel(lv){
