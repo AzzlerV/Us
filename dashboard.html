@@ -77,19 +77,22 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk'
 #palette{
   height:44px;background:var(--bg3);border-bottom:1px solid var(--border);
   display:flex;align-items:center;padding:0 12px;gap:6px;flex-shrink:0;
+  overflow-x:auto;overflow-y:hidden;
 }
-.palette-lbl{font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+#palette::-webkit-scrollbar{height:3px}
+#palette::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+.palette-lbl{font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-right:6px;white-space:nowrap;flex-shrink:0}
 .ptool{
   display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:3px;
   border:1px solid var(--border);background:transparent;color:var(--muted);
   font-family:inherit;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
-  cursor:pointer;transition:all 0.15s;
+  cursor:pointer;transition:all 0.15s;flex-shrink:0;white-space:nowrap;
 }
 .ptool:hover{border-color:var(--border2);color:var(--text)}
 .ptool.active{border-color:rgba(139,111,245,0.5);background:rgba(139,111,245,0.1);color:var(--accent)}
 .ptool .dot{width:9px;height:9px;border-radius:2px}
-.pal-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
-.zoom-controls{margin-left:auto;display:flex;align-items:center;gap:5px}
+.pal-sep{width:1px;height:24px;background:var(--border);margin:0 4px;flex-shrink:0}
+.zoom-controls{margin-left:auto;display:flex;align-items:center;gap:5px;flex-shrink:0}
 .zoom-btn{background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-size:12px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
 .zoom-btn:hover{color:var(--text);border-color:var(--border2)}
 #zoomLabel{font-size:10px;color:var(--muted);min-width:36px;text-align:center}
@@ -254,6 +257,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk'
   <div class="logo">Muskan <span>Dashboard</span></div>
   <div id="lvlLabel">No level selected</div>
   <div class="top-spacer"></div>
+  <button class="top-btn" id="restoreLevelsBtn" title="Force reload levels from the database">↺ Restore Levels</button>
   <button class="top-btn" id="previewBtn">▶ Preview</button>
   <button class="top-btn green" id="publishBtn">↑ Publish</button>
   <button class="top-btn accent" id="openGameBtn">Open Game ↗</button>
@@ -292,6 +296,9 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk'
       </button>
       <button class="ptool" data-tool="block" id="toolBlock">
         <span class="dot" style="background:#8a6a4a"></span> Block
+      </button>
+      <button class="ptool" data-tool="chat" id="toolChat">
+        <span class="dot" style="background:#40ff90;border-radius:5px"></span> Chat
       </button>
       <div class="pal-sep"></div>
       <div class="zoom-controls">
@@ -451,7 +458,60 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk'
     <input type="hidden" id="editProfId">
     <div class="modal-actions">
       <button class="modal-cancel" id="cancelEditProf">Cancel</button>
-      <button class="save-btn" id="confirmEditProf">Save Changes</button>
+      <button class="save-btn" id="confirmEditProf">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Editor Modal -->
+<div class="modal-overlay" id="chatEditorModal">
+  <div class="modal-box" style="width:min(800px,95vw);max-height:90vh;display:flex;flex-direction:column">
+    <h3>Edit Interactive Chat</h3>
+    
+    <div style="display:flex;gap:20px;flex:1;min-height:400px;overflow:hidden">
+      <!-- Left Panel: Nodes List -->
+      <div style="width:220px;display:flex;flex-direction:column;border-right:1px solid var(--border);padding-right:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div class="prop-lbl" style="margin:0">Chat Nodes</div>
+          <button class="save-btn" id="addChatNodeBtn" style="width:auto;padding:4px 8px;font-size:9px">+ Add Node</button>
+        </div>
+        <div id="chatNodesList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+      
+      <!-- Right Panel: Node Editor -->
+      <div style="flex:1;display:flex;flex-direction:column;overflow-y:auto;padding-right:10px" id="chatNodeEditorArea">
+        <div class="no-select-msg" id="chatEditorEmptyMsg">Select a node from the left to edit it.</div>
+        
+        <div id="chatNodeContent" style="display:none;flex-direction:column;gap:20px">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <label class="prop-lbl" style="margin:0">Incoming Messages</label>
+              <button class="save-btn" id="addChatMsgBtn" style="width:auto;padding:4px 8px;font-size:9px">+ Add Message</button>
+            </div>
+            <div id="chatMessagesList" style="display:flex;flex-direction:column;gap:8px">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+          
+          <div style="border-top:1px solid var(--border);padding-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <label class="prop-lbl" style="margin:0">Player Options (Branching)</label>
+              <button class="save-btn" id="addChatOptBtn" style="width:auto;padding:4px 8px;font-size:9px">+ Add Option</button>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:10px">If no options are provided, the chat will end after the messages.</div>
+            <div id="chatOptionsList" style="display:flex;flex-direction:column;gap:8px">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+      <button class="modal-cancel" id="closeChatEditorBtn">Close Editor</button>
+      <button class="save-btn" id="saveChatScriptBtn">Save Chat to Element</button>
     </div>
   </div>
 </div>
@@ -709,19 +769,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-function showToast(msg) {
-  let t = document.getElementById('dashToast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'dashToast';
-    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(139,111,245,0.92);color:#fff;padding:10px 22px;border-radius:4px;font-size:12px;letter-spacing:0.1em;z-index:9999;pointer-events:none;transition:opacity 0.4s;opacity:0';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.style.opacity = '1';
-  clearTimeout(t._to);
-  t._to = setTimeout(() => t.style.opacity = '0', 1800);
-}
+// showToast is defined later near #toast element
 
 const EDITOR_H = 420; // canvas height in pixels
 
@@ -837,6 +885,18 @@ function drawEditorEl(el,sx,GY_base,selected){
       ex.fillStyle='rgba(255,192,80,0.85)';
       ex.beginPath();ex.moveTo(sx,GY-38);ex.lineTo(sx+r,GY-28);ex.lineTo(sx,GY-18);ex.lineTo(sx-r,GY-28);ex.closePath();ex.fill();
       ex.shadowBlur=0; edLabel(sx,GY-14,'img',el); break;
+    }
+    case 'chat': {
+      const r=10;
+      ex.shadowBlur=sel?16:8; ex.shadowColor='#40ff90';
+      ex.fillStyle='rgba(64,255,144,0.85)';
+      ex.beginPath();ex.moveTo(sx,GY-28);
+      // Drawing a little speech bubble
+      ex.arc(sx,GY-34,r,0,Math.PI*2);
+      ex.fill();
+      ex.beginPath();ex.moveTo(sx-4,GY-26);ex.lineTo(sx,GY-18);ex.lineTo(sx+4,GY-26);ex.fill();
+      ex.shadowBlur=0;
+      edLabel(sx,GY-14,'chat',el); break;
     }
     case 'exit': {
       ex.shadowBlur=sel?20:12; ex.shadowColor='#a060ff';
@@ -968,6 +1028,7 @@ function makeEl(type, wx){
   if(type==='image') return {...base, imageType:'book', title:'An image:', content:'Caption here.'};
   if(type==='exit') return {...base, nextLevelId:null};
   if(type==='block') return {...base, w:70, h:45, color:'#3d2e1f'};
+  if(type==='chat') return {...base, title:'Group Chat', isSecret:false, chatScript:[{ id:'node_'+Date.now(), messages:[], options:[] }]};
   if(type==='ground') return {...base};
   return base;
 }
@@ -987,7 +1048,7 @@ document.querySelectorAll('.ptool').forEach(btn=>{
 // Zoom
 document.getElementById('zoomIn').addEventListener('click',()=>setZoom(Math.min(zoom*1.5,1)));
 document.getElementById('zoomOut').addEventListener('click',()=>setZoom(Math.max(zoom/1.5,0.08)));
-function setZoom(z){ zoom=z; document.getElementById('zoomLabel')=z; document.getElementById('zoomLabel').textContent=Math.round(z*100)+'%'; resizeCanvas(); }
+function setZoom(z){ zoom=z; document.getElementById('zoomLabel').textContent=Math.round(z*100)+'%'; resizeCanvas(); }
 
 // ════════════════════════════════════════════════════════════
 // LEVEL LIST
@@ -1134,6 +1195,10 @@ function renderProps(){
         html+=`<div style="margin-top:6px;text-align:center;"><div style="font-size:9px;color:#7ab8ff;margin-bottom:4px">✓ Custom image active — preset icon ignored</div><img src="${el.imageUrl}" style="max-width:100%;max-height:110px;border-radius:3px;border:1px solid var(--border);"/><br><button class="del-btn" id="clearImgBtn" style="padding:4px;font-size:9px;margin-top:4px">Remove Uploaded Image</button></div>`;
       }
     }
+    if(el.type==='chat'){
+      html+=`<div class="prop-row"><label class="prop-lbl">Chat Name / Topic</label><input class="prop-input" id="propTitle" value="${esc(el.title||'')}"></div>`;
+      html+=`<button class="save-btn" id="openChatEditorBtn" style="margin-top:10px;margin-bottom:10px;background:rgba(64,255,144,0.1);color:#40ff90;border-color:rgba(64,255,144,0.3)">Edit Chat Script (Nodes & Options)</button>`;
+    }
     if(el.type==='exit'){
       html+=`<div class="prop-row"><label class="prop-lbl">Next Level ID</label>
         <select class="prop-select" id="propNext">
@@ -1180,8 +1245,9 @@ function renderProps(){
       if(el.type==='block'){ el.w=parseInt(document.getElementById('propWidth').value)||70; el.h=parseInt(document.getElementById('propHeight').value)||45; const c=document.getElementById('propColor').value; if(c) el.color=c; }
       if(el.type==='message'||el.type==='image'){ el.title=document.getElementById('propTitle').value; el.content=document.getElementById('propContent').value; }
       if(el.type==='image') el.imageType=document.getElementById('propImgType').value;
+      if(el.type==='chat') { el.title=document.getElementById('propTitle').value; }
       if(el.type==='exit'){ const nxt=document.getElementById('propNext').value; el.nextLevelId=nxt||null; }
-      el.isSecret=document.getElementById('propSecret').checked;
+      el.isSecret=document.getElementById('propSecret')?.checked||false;
       S.saveLevel(lv);
       const saved=document.getElementById('elSaved'); saved.classList.add('on'); setTimeout(()=>saved.classList.remove('on'),2000);
       renderEditor();
@@ -1800,12 +1866,41 @@ document.getElementById('publishBtn').addEventListener('click',async()=>{
   showToast('Published ✓');
 });
 
+// Restore Levels: force-reload from Firebase
+document.getElementById('restoreLevelsBtn').addEventListener('click', async () => {
+  showToast('Fetching levels from database…');
+  // Force clear local cache so initCloud re-fetches
+  try {
+    const snap = await db.ref('muskan_levels').once('value');
+    const raw = snap.val();
+    let restored = null;
+    if (raw && raw.custom && Array.isArray(raw.data) && raw.data.length > 0) {
+      restored = raw.data;
+    } else if (Array.isArray(raw) && raw.length > 0) {
+      restored = raw;
+    }
+    if (restored) {
+      levels = restored;
+      S.cloud['muskan_levels'] = raw;
+      renderLevelList();
+      if(levels.length > 0) selectLevel(levels[0].id);
+      showToast(`✓ Restored ${levels.length} level(s) from database`);
+    } else {
+      showToast('No custom levels found in database');
+    }
+  } catch(err) {
+    showToast('Error restoring: ' + err.message);
+  }
+});
+
 // ════════════════════════════════════════════════════════════
 // TOAST
 // ════════════════════════════════════════════════════════════
 let toastTimeout=null;
 function showToast(msg){
-  const t=document.getElementById('toast'); t.textContent=msg;
+  const t=document.getElementById('toast');
+  if(!t) return;
+  t.textContent=msg;
   t.classList.add('on'); clearTimeout(toastTimeout);
   toastTimeout=setTimeout(()=>t.classList.remove('on'),2800);
 }
@@ -1866,21 +1961,196 @@ document.getElementById('prevObNextBtn').addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// CHAT EDITOR LOGIC
+// ════════════════════════════════════════════════════════════
+let activeChatEl = null;
+let activeChatScript = [];
+let activeChatNodeId = null;
+
+// Attach click listener to dynamic 'openChatEditorBtn' in renderProps
+document.getElementById('propsBody').addEventListener('click', e => {
+  if(e.target.id === 'openChatEditorBtn') {
+    const lv=curLv(); if(!lv) return;
+    activeChatEl=lv.elements.find(el=>el.id===selElId);
+    if(!activeChatEl || activeChatEl.type !== 'chat') return;
+    
+    // Ensure script exists
+    if(!activeChatEl.chatScript || activeChatEl.chatScript.length === 0) {
+      activeChatEl.chatScript = [{ id:'node_'+Date.now(), messages:[], options:[] }];
+    }
+    
+    // Deep copy script for editing
+    activeChatScript = JSON.parse(JSON.stringify(activeChatEl.chatScript));
+    activeChatNodeId = activeChatScript[0].id;
+    
+    document.getElementById('chatEditorModal').classList.add('active');
+    renderChatNodes();
+    renderChatNodeEditor();
+  }
+});
+
+document.getElementById('closeChatEditorBtn').addEventListener('click', () => {
+  document.getElementById('chatEditorModal').classList.remove('active');
+});
+
+document.getElementById('saveChatScriptBtn').addEventListener('click', () => {
+  if(activeChatEl) {
+    // Save working script back to element
+    activeChatEl.chatScript = JSON.parse(JSON.stringify(activeChatScript));
+    const lv=curLv();
+    if(lv) { S.saveLevel(lv); showToast('Chat script saved to element ✓'); }
+  }
+  document.getElementById('chatEditorModal').classList.remove('active');
+});
+
+function renderChatNodes() {
+  const list = document.getElementById('chatNodesList');
+  list.innerHTML = activeChatScript.map(node => `
+    <div class="ob-seq-card ${node.id === activeChatNodeId ? 'active' : ''}" style="padding:8px" onclick="selectChatNode('${node.id}')">
+      <div class="ob-seq-title" style="font-family:monospace">${node.id}</div>
+      <div class="ob-seq-meta">${node.messages.length} msgs, ${node.options.length} options</div>
+      ${activeChatScript.length > 1 ? `<button class="del-btn" onclick="event.stopPropagation(); deleteChatNode('${node.id}')" style="padding:4px;margin-top:6px;width:100%">Delete</button>` : ''}
+    </div>
+  `).join('');
+}
+
+window.selectChatNode = function(id) {
+  activeChatNodeId = id;
+  renderChatNodes();
+  renderChatNodeEditor();
+};
+
+window.deleteChatNode = function(id) {
+  if(!confirm('Delete this node? Any options pointing to it will break.')) return;
+  const idx = activeChatScript.findIndex(n => n.id === id);
+  if(idx >= 0) {
+    activeChatScript.splice(idx, 1);
+    if(activeChatNodeId === id) activeChatNodeId = activeChatScript[0].id;
+    renderChatNodes();
+    renderChatNodeEditor();
+  }
+};
+
+document.getElementById('addChatNodeBtn').addEventListener('click', () => {
+  const newNode = { id: 'node_'+Date.now(), messages:[], options:[] };
+  activeChatScript.push(newNode);
+  activeChatNodeId = newNode.id;
+  renderChatNodes();
+  renderChatNodeEditor();
+});
+
+function renderChatNodeEditor() {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  const emptyMsg = document.getElementById('chatEditorEmptyMsg');
+  const content = document.getElementById('chatNodeContent');
+  
+  if(!node) {
+    emptyMsg.style.display = 'block';
+    content.style.display = 'none';
+    return;
+  }
+  
+  emptyMsg.style.display = 'none';
+  content.style.display = 'flex';
+  
+  // Render Messages
+  const msgList = document.getElementById('chatMessagesList');
+  msgList.innerHTML = node.messages.map((m, i) => `
+    <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);padding:10px;border-radius:4px;display:flex;gap:10px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input class="prop-input" value="${esc(m.sender||'')}" placeholder="Sender Name" onchange="updateChatMsg(${i}, 'sender', this.value)">
+        <textarea class="prop-input prop-textarea" placeholder="Message text" onchange="updateChatMsg(${i}, 'text', this.value)">${esc(m.text||'')}</textarea>
+      </div>
+      <button class="del-btn" style="width:auto;align-self:flex-start" onclick="deleteChatMsg(${i})">✕</button>
+    </div>
+  `).join('');
+  if(node.messages.length===0) msgList.innerHTML = '<div style="font-size:11px;color:var(--muted)">No messages in this node.</div>';
+  
+  // Render Options
+  const optList = document.getElementById('chatOptionsList');
+  const allNodes = activeChatScript.map(n => n.id);
+  optList.innerHTML = node.options.map((o, i) => `
+    <div style="background:rgba(64,255,144,0.05);border:1px solid rgba(64,255,144,0.2);padding:10px;border-radius:4px;display:flex;gap:10px;align-items:center">
+      <div style="flex:1">
+        <input class="prop-input" value="${esc(o.text||'')}" placeholder="Player choice text" onchange="updateChatOpt(${i}, 'text', this.value)">
+      </div>
+      <div style="font-size:12px;color:var(--muted)">→</div>
+      <div style="flex:1">
+        <select class="prop-select" onchange="updateChatOpt(${i}, 'nextNode', this.value)">
+          <option value="">-- Select Target Node --</option>
+          ${allNodes.map(id => `<option value="${id}" ${o.nextNode===id?'selected':''}>${id}</option>`).join('')}
+        </select>
+      </div>
+      <button class="del-btn" style="width:auto" onclick="deleteChatOpt(${i})">✕</button>
+    </div>
+  `).join('');
+  if(node.options.length===0) optList.innerHTML = '<div style="font-size:11px;color:var(--muted)">No options. Chat will end after messages.</div>';
+}
+
+document.getElementById('addChatMsgBtn').addEventListener('click', () => {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  if(node) { node.messages.push({ sender:'Sender', text:'' }); renderChatNodeEditor(); }
+});
+
+document.getElementById('addChatOptBtn').addEventListener('click', () => {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  if(node) { node.options.push({ text:'Choice', nextNode:'' }); renderChatNodeEditor(); }
+});
+
+window.updateChatMsg = function(idx, field, val) {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  if(node && node.messages[idx]) node.messages[idx][field] = val;
+};
+window.deleteChatMsg = function(idx) {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  if(node) { node.messages.splice(idx, 1); renderChatNodeEditor(); }
+};
+window.updateChatOpt = function(idx, field, val) {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  if(node && node.options[idx]) node.options[idx][field] = val;
+};
+window.deleteChatOpt = function(idx) {
+  const node = activeChatScript.find(n => n.id === activeChatNodeId);
+  if(node) { node.options.splice(idx, 1); renderChatNodeEditor(); }
+};
+
 // INIT
 // ════════════════════════════════════════════════════════════
 async function init(){
   await S.initCloud();
-  const remote=await S.getLevels();
-  if (remote !== null && remote !== undefined) {
+
+  // Primary: load levels from Firebase/cloud
+  const remote = await S.getLevels();
+  if (Array.isArray(remote) && remote.length > 0) {
     levels = remote;
   } else {
-    levels = DEFAULT_LEVELS;
-    // Push defaults to Firebase so mobile gets something
-    S.saveLevels(levels);
+    // Secondary: check if cloud has the full muskan_levels object with custom flag
+    const rawCloud = S.cloud['muskan_levels'];
+    if (rawCloud && rawCloud.custom && Array.isArray(rawCloud.data) && rawCloud.data.length > 0) {
+      levels = rawCloud.data;
+    } else {
+      // Tertiary: localStorage fallback
+      try {
+        const localRaw = localStorage.getItem('muskan_levels');
+        if (localRaw) {
+          const parsed = JSON.parse(localRaw);
+          if (parsed && parsed.custom && Array.isArray(parsed.data) && parsed.data.length > 0) {
+            levels = parsed.data;
+          } else if (Array.isArray(parsed) && parsed.length > 0) {
+            levels = parsed;
+          }
+        }
+      } catch(_) {}
+    }
+    // Only fall back to defaults if truly nothing found
+    if (!levels || levels.length === 0) {
+      levels = DEFAULT_LEVELS;
+      S.saveLevels(levels);
+    }
   }
 
-  // ── Sync all localStorage data to the new Firebase DB ──
-  // Only pushes if the key is missing from Firebase (cloud is empty for it)
+  // ── Sync missing keys to Firebase ──
   const syncIfMissing = (key) => {
     if (S.cloud[key] === undefined) {
       try {
@@ -1899,14 +2169,17 @@ async function init(){
   }
 
   // Check for unread inbox messages
-  const msgs=S.get('muskan_messages',[]);
-  const unread=msgs.filter(m=>m.fromPlayer&&!m.isRead).length;
-  if(unread){ document.getElementById('inboxBadge').style.display='inline'; document.getElementById('inboxBadge').textContent=unread; }
+  const msgs = S.get('muskan_messages', []);
+  const unread = msgs.filter(m => m.fromPlayer && !m.isRead).length;
+  if(unread){
+    document.getElementById('inboxBadge').style.display = 'inline';
+    document.getElementById('inboxBadge').textContent = unread;
+  }
 
   renderLevelList();
 
   // Auto-select first level
-  if(levels.length>0){ selectLevel(levels[0].id); }
+  if(levels.length > 0){ selectLevel(levels[0].id); }
   else { renderProps(); renderEditor(); }
 }
 

@@ -585,6 +585,81 @@ body{margin:0;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-s
 </div>
 <div id="previewSelBox"></div>
 
+<div class="overlay" id="chatSimOverlay" style="z-index:900; background:rgba(0,0,0,0.85)">
+  <div style="width:min(400px, 95vw); height:min(600px, 90vh); background:#0f0f14; border:1px solid #2a2a35; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 50px rgba(0,0,0,0.9)">
+    <div id="chatSimHeader" style="background:#1a1a24; padding:16px 20px; border-bottom:1px solid #2a2a35; display:flex; align-items:center; justify-content:space-between">
+      <div style="font-family:'Space Grotesk',sans-serif; color:#f0f0f5; font-size:1.1rem; font-weight:600" id="chatSimTitle">Group Chat</div>
+      <button class="pbar-btn" id="chatSimCloseBtn" style="border:none; padding:4px 8px; margin:0">✕</button>
+    </div>
+    
+    <div id="chatSimMessages" style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; scroll-behavior:smooth">
+      <!-- Messages will be appended here -->
+    </div>
+    
+    <div id="chatSimOptions" style="background:#15151e; border-top:1px solid #2a2a35; padding:16px 20px; display:flex; flex-direction:column; gap:8px">
+      <!-- Options will be appended here -->
+    </div>
+  </div>
+</div>
+<style>
+.chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.chat-bubble.incoming {
+  align-self: flex-start;
+  background: #2a2a35;
+  color: #f0f0f5;
+  border-bottom-left-radius: 2px;
+}
+.chat-bubble.outgoing {
+  align-self: flex-end;
+  background: #40ff90;
+  color: #0f0f14;
+  border-bottom-right-radius: 2px;
+}
+.chat-sender {
+  font-size: 0.7rem;
+  color: #888;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.chat-opt-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: #40ff90;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: fadeUp 0.3s ease forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+.chat-opt-btn:hover {
+  background: rgba(64,255,144,0.1);
+  border-color: rgba(64,255,144,0.3);
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
 <div class="overlay" id="addElOv" style="z-index:400">
   <div class="dialog" style="width:340px;padding:24px;background:rgba(8,4,16,0.98);border:1px solid rgba(139,111,245,0.4);border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,0.8),0 0 20px rgba(139,111,245,0.2)">
     <div style="font-family:'Crimson Text',serif;font-size:1.4rem;color:var(--ui-accent);margin-bottom:16px;text-align:center">Add Element</div>
@@ -1695,6 +1770,7 @@ function drawElements(lv){
       case 'decoration': drawDeco(el,sx); break;
       case 'message':    drawMsgNode(el,sx); break;
       case 'image':      drawImgNode(el,sx); break;
+      case 'chat':       drawChatNode(el,sx); break;
       case 'exit':       drawExit(el,sx); break;
       case 'block':      drawBlock(el,sx); break;
       case 'hazard':     drawHazard(el,sx); break;
@@ -2038,6 +2114,37 @@ function drawImgNode(el,sx){
   cx.restore();
 }
 
+// ── CHAT NODE ──
+function drawChatNode(el,sx){
+  const p=0.5+0.5*Math.sin(animT*2.1+el.x*0.001);
+  const floatY = Math.sin(animT*1.35 + el.x*0.007) * 7;
+  const ny=GY-52 + floatY;
+  const r=13+p*4;
+  const near=Math.abs(player.worldX-el.x)<75;
+  const uid = getElUid(curLevel, el);
+  const read = player.messagesRead.includes(uid);
+  
+  cx.shadowBlur = near ? 28+p*18 : 18;
+  cx.shadowColor = '#40ff90';
+  
+  const og=cx.createRadialGradient(sx,ny,0,sx,ny,r);
+  og.addColorStop(0,'rgba(64,255,144,0.9)');
+  og.addColorStop(1,'rgba(32,160,90,0.25)');
+  
+  cx.fillStyle=og; cx.beginPath(); cx.arc(sx,ny,r,0,Math.PI*2); cx.fill();
+  cx.shadowBlur=0; cx.strokeStyle='rgba(100,255,160,0.55)';
+  cx.lineWidth=1; cx.beginPath(); cx.arc(sx,ny,r*0.55,0,Math.PI*2); cx.stroke();
+  
+  // Speech bubble tail
+  cx.fillStyle='rgba(64,255,144,0.7)';
+  cx.beginPath(); cx.moveTo(sx-4, ny+r*0.4); cx.lineTo(sx, ny+r*0.9); cx.lineTo(sx+4, ny+r*0.4); cx.fill();
+  
+  if(read){cx.globalAlpha=0.38;cx.fillStyle='#80ff80';cx.font='9px sans-serif';cx.textAlign='center';cx.fillText('✓',sx,ny+3);cx.globalAlpha=1;}
+  cx.strokeStyle='rgba(64,255,144,0.22)';
+  cx.lineWidth=1; cx.setLineDash([3,6]);
+  cx.beginPath(); cx.moveTo(sx,ny+r); cx.lineTo(sx,GY); cx.stroke(); cx.setLineDash([]);
+}
+
 // ── EXIT PORTAL ──
 function drawExit(el,sx){
   const p=0.5+0.5*Math.sin(animT*1.3);
@@ -2197,6 +2304,7 @@ function interact(){
   const n=getNear(); if(!n) return;
   if(n.type==='message') showDialog(n);
   else if(n.type==='image') showImg(n);
+  else if(n.type==='chat') showChat(n);
   else if(n.type==='door'){
     openDoorPassModal();
   }
@@ -3279,6 +3387,146 @@ function renderDoorProfileList() {
     });
     listEl.appendChild(btn);
   });
+}
+
+// ════════════════════════════════════════════════════════════
+// CHAT ELEMENT LOGIC
+// ════════════════════════════════════════════════════════════
+let chatSimActive = false;
+let currentChatScript = null;
+let currentChatEl = null;
+let currentChatNodeId = null;
+let chatMsgQueue = [];
+let chatIsTyping = false;
+let chatTypeTimer = null;
+
+const chatSimOverlay = document.getElementById('chatSimOverlay');
+const chatSimTitle = document.getElementById('chatSimTitle');
+const chatSimMessages = document.getElementById('chatSimMessages');
+const chatSimOptions = document.getElementById('chatSimOptions');
+const chatSimCloseBtn = document.getElementById('chatSimCloseBtn');
+
+chatSimCloseBtn.addEventListener('click', closeChatSim);
+
+function showChat(el) {
+  if(!el.chatScript || el.chatScript.length === 0) {
+    toast("This chat seems empty...");
+    return;
+  }
+  currentChatEl = el;
+  currentChatScript = el.chatScript;
+  currentChatNodeId = currentChatScript[0].id;
+  
+  chatSimTitle.textContent = el.title || "Group Chat";
+  chatSimMessages.innerHTML = '';
+  chatSimOptions.innerHTML = '';
+  
+  chatSimActive = true;
+  inputLocked = true;
+  gs.dialog = true; // reusing dialog state flag for general UI lock
+  
+  chatSimOverlay.style.display = 'flex';
+  chatSimOverlay.style.opacity = 1;
+  chatSimOverlay.style.pointerEvents = 'auto';
+  
+  // Mark as read
+  const uid = getElUid(curLevel, el);
+  if (!player.messagesRead.includes(uid)) {
+    player.messagesRead.push(uid);
+    S.saveProgress(player);
+  }
+  
+  processChatNode();
+}
+
+function processChatNode() {
+  const node = currentChatScript.find(n => n.id === currentChatNodeId);
+  if(!node) {
+    closeChatSim();
+    return;
+  }
+  
+  chatMsgQueue = [...(node.messages || [])];
+  chatSimOptions.innerHTML = ''; // Clear options while messages are playing
+  
+  playNextChatMsg();
+}
+
+function playNextChatMsg() {
+  if (chatMsgQueue.length === 0) {
+    showChatOptions();
+    return;
+  }
+  
+  chatIsTyping = true;
+  const msg = chatMsgQueue.shift();
+  
+  // Simulate typing delay
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'chat-bubble incoming';
+  typingDiv.style.opacity = '0.5';
+  typingDiv.innerHTML = `<div class="chat-sender">${esc(msg.sender || 'Someone')}</div><i>typing...</i>`;
+  chatSimMessages.appendChild(typingDiv);
+  chatSimMessages.scrollTop = chatSimMessages.scrollHeight;
+  
+  const delay = 600 + Math.random() * 800; // 600ms - 1.4s delay
+  
+  chatTypeTimer = setTimeout(() => {
+    chatSimMessages.removeChild(typingDiv);
+    
+    // Add real message
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chat-bubble incoming';
+    msgDiv.innerHTML = `<div class="chat-sender">${esc(msg.sender || 'Someone')}</div><div>${esc(msg.text || '').replace(/\n/g, '<br>')}</div>`;
+    chatSimMessages.appendChild(msgDiv);
+    chatSimMessages.scrollTop = chatSimMessages.scrollHeight;
+    
+    chatIsTyping = false;
+    setTimeout(playNextChatMsg, 400); // small pause between messages
+  }, delay);
+}
+
+function showChatOptions() {
+  const node = currentChatScript.find(n => n.id === currentChatNodeId);
+  if(!node || !node.options || node.options.length === 0) {
+    // End of chat
+    const endBtn = document.createElement('button');
+    endBtn.className = 'chat-opt-btn';
+    endBtn.textContent = "Leave chat";
+    endBtn.onclick = closeChatSim;
+    chatSimOptions.appendChild(endBtn);
+    return;
+  }
+  
+  node.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'chat-opt-btn';
+    btn.textContent = opt.text || "Continue";
+    btn.style.animationDelay = `${idx * 0.1}s`;
+    
+    btn.onclick = () => {
+      // Echo player choice
+      const playerMsg = document.createElement('div');
+      playerMsg.className = 'chat-bubble outgoing';
+      playerMsg.innerHTML = `<div class="chat-sender">${esc(player.name || 'You')}</div><div>${esc(opt.text || '')}</div>`;
+      chatSimMessages.appendChild(playerMsg);
+      chatSimMessages.scrollTop = chatSimMessages.scrollHeight;
+      
+      chatSimOptions.innerHTML = '';
+      currentChatNodeId = opt.nextNode;
+      setTimeout(processChatNode, 500);
+    };
+    
+    chatSimOptions.appendChild(btn);
+  });
+}
+
+function closeChatSim() {
+  chatSimActive = false;
+  inputLocked = false;
+  gs.dialog = false;
+  chatSimOverlay.style.display = 'none';
+  if (chatTypeTimer) clearTimeout(chatTypeTimer);
 }
 
 // ════════════════════════════════════════════════════════════
